@@ -6,7 +6,7 @@ def basic_reply_is_valid(reply: str, keyword):
     return reply is not None and reply in BASIC_REPLIES_DICT[keyword.upper()]
 
 
-if __name__ == '__main__':
+def test_basic_answers():
     mallard = Mallard()
 
     assert basic_reply_is_valid(mallard.check_simple_sayings('ква'), 'КВА')
