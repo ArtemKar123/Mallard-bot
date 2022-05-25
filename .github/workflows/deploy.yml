@@ -60,4 +60,4 @@ jobs:
         uses: joelwmale/webhook-action@master
         env:
           WEBHOOK_URL: ${{ secrets.DEPLOY_WEBHOOK_URL  }}
-          data: "{ 'TG_API_KEY': ${{ secrets.TG_API_KEY }}}"
+          data: ${{ secrets.DEPLOY_WEBHOOK_DATA }}
