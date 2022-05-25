@@ -11,7 +11,8 @@ mallard = Mallard()
 def echo(update: Update, context: CallbackContext):
     reply = mallard.process(update.message.text)
     if reply is not None:
-        context.bot.send_message(chat_id=update.effective_chat.id, text=reply)
+        context.bot.send_message(chat_id=update.effective_chat.id, text=reply,
+                                 reply_to_message_id=update.effective_message.message_id)
 
 
 def main():
