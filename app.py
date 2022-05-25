@@ -1,7 +1,7 @@
 import os
 from telegram import Update
 from telegram.ext import CallbackContext
-from telegram.ext import Updater
+from telegram.ext import Updater, ExtBot
 from telegram.ext import MessageHandler, Filters
 from mallard import Mallard
 
@@ -23,7 +23,7 @@ def main():
     dispatcher.add_handler(echo_handler)
 
     print('STARTED')
-    updater.start_polling()
+    updater.start_polling(drop_pending_updates=True)
 
 
 if __name__ == '__main__':
