@@ -32,3 +32,10 @@ def test_denial_answers():
     assert basic_reply_is_valid(mallard.process('миу'), 'МИУ', DENIAL_REPLIES_DICT)
     assert basic_reply_is_valid(mallard.process('миУ'), 'МИУ', DENIAL_REPLIES_DICT)
     assert mallard.process('миy') is None
+
+
+def test_miu_compatibility():
+    # checks that bot won't fight with miu bot forever
+    for reply in DENIAL_REPLIES_DICT['МИУ']:
+        assert 'МИУ' not in reply.upper()
+        assert 'МЯУ' not in reply.upper()
