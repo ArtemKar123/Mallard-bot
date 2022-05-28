@@ -1,5 +1,5 @@
 import random
-from content.dictionaries import BASIC_REPLIES_DICT, DENIAL_REPLIES_DICT
+from content.dictionaries import BASIC_REPLIES_DICT, DENIAL_REPLIES_DICT, RANDOM_RESPONCES_DICT
 
 
 class Mallard:
@@ -7,7 +7,8 @@ class Mallard:
     Replies to stuff.
     """
 
-    def __init__(self):
+    def __init__(self, random_answer_rate=1000):
+        self.RANDOM_ANSWER_RATE = random_answer_rate
         pass
 
     def process(self, saying: str):
@@ -19,6 +20,8 @@ class Mallard:
         if (reply := self.check_basic_saying_based_on_dict(saying, BASIC_REPLIES_DICT)) is not None:
             return reply
         if (reply := self.check_basic_saying_based_on_dict(saying, DENIAL_REPLIES_DICT)) is not None:
+            return reply
+        if (reply := self.generate_random_answer()) is not None:
             return reply
 
     @staticmethod
@@ -36,4 +39,13 @@ class Mallard:
         if (l := len(found_keywords)) > 0:
             chosen_keyword = found_keywords[random.randint(0, l - 1)]
             return basic_dict[chosen_keyword][random.randint(0, len(basic_dict[chosen_keyword]) - 1)]
+        return None
+
+    def generate_random_answer(self):
+        """
+        says random stuff
+        :return:
+        """
+        if random.randint(0, self.RANDOM_ANSWER_RATE) == 0:
+            return RANDOM_RESPONCES_DICT[random.randint(0, len(RANDOM_RESPONCES_DICT) - 1)]
         return None

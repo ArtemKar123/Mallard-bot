@@ -1,5 +1,5 @@
 from mallard import Mallard
-from content.dictionaries import BASIC_REPLIES_DICT, DENIAL_REPLIES_DICT
+from content.dictionaries import BASIC_REPLIES_DICT, DENIAL_REPLIES_DICT, RANDOM_RESPONCES_DICT
 
 mallard = Mallard()
 
@@ -39,3 +39,13 @@ def test_miu_compatibility():
     for reply in DENIAL_REPLIES_DICT['МИУ']:
         assert 'МИУ' not in reply.upper()
         assert 'МЯУ' not in reply.upper()
+
+
+def test_random_answers():
+    cnt = 0
+    for i in range(5000):
+        resp = mallard.process("aboba")
+        if resp is not None:
+            assert resp in RANDOM_RESPONCES_DICT
+            cnt += 1
+    assert 0 < cnt < 100
