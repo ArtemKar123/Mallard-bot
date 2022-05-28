@@ -5,7 +5,7 @@ from telegram.ext import Updater, ExtBot
 from telegram.ext import MessageHandler, Filters
 from mallard import Mallard
 
-mallard = Mallard()
+mallard = Mallard(random_answer_rate=250)
 
 
 def echo(update: Update, context: CallbackContext):
