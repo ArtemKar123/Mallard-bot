@@ -48,4 +48,4 @@ def test_random_answers():
         if resp is not None:
             assert resp in RANDOM_RESPONCES_DICT
             cnt += 1
-    assert 0 < cnt < 100
+    assert 0 < cnt < 50
