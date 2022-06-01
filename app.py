@@ -20,7 +20,7 @@ def main():
     updater = Updater(token=token, use_context=True)
     dispatcher = updater.dispatcher
 
-    echo_handler = MessageHandler(Filters.text & (~Filters.command) & (~Filters.photo), echo)
+    echo_handler = MessageHandler(Filters.text & (~Filters.command), echo)
     dispatcher.add_handler(echo_handler)
 
     print('STARTED')
