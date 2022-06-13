@@ -1,5 +1,5 @@
 import random
-from content.dictionaries import BASIC_REPLIES_DICT, DENIAL_REPLIES_DICT, RANDOM_RESPONCES_DICT
+from content.dictionaries import BASIC_REPLIES_DICT, DENIAL_REPLIES_DICT, RANDOM_RESPONCES_DICT, RANDOM_STICKERS
 
 
 class Mallard:
@@ -16,11 +16,11 @@ class Mallard:
         :param saying:
         """
         if len(saying) == 0:
-            return None
+            return None, False
         if (reply := self.check_basic_saying_based_on_dict(saying, BASIC_REPLIES_DICT)) is not None:
-            return reply
+            return reply, False
         if (reply := self.check_basic_saying_based_on_dict(saying, DENIAL_REPLIES_DICT)) is not None:
-            return reply
+            return reply, False
         if (reply := self.generate_random_answer()) is not None:
             return reply
 
@@ -47,5 +47,8 @@ class Mallard:
         :return:
         """
         if random.randint(0, self.RANDOM_ANSWER_RATE) == 0:
-            return RANDOM_RESPONCES_DICT[random.randint(0, len(RANDOM_RESPONCES_DICT) - 1)]
-        return None
+            if random.randint(0, 1) == 0:
+                return RANDOM_RESPONCES_DICT[random.randint(0, len(RANDOM_RESPONCES_DICT) - 1)], False
+            else:
+                return RANDOM_STICKERS[random.randint(0, len(RANDOM_STICKERS) - 1)], True
+        return None, False
