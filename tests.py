@@ -1,10 +1,11 @@
 from mallard import Mallard
-from content.dictionaries import BASIC_REPLIES_DICT, DENIAL_REPLIES_DICT, RANDOM_RESPONCES_DICT
+from content.dictionaries import BASIC_REPLIES_DICT, DENIAL_REPLIES_DICT, RANDOM_RESPONCES_DICT, RANDOM_STICKERS
 
 mallard = Mallard()
 
 
-def basic_reply_is_valid(reply: str, keyword, desired_dict=BASIC_REPLIES_DICT):
+def basic_reply_is_valid(reply, keyword, desired_dict=BASIC_REPLIES_DICT):
+    reply, is_sticker = reply
     return reply is not None and reply in desired_dict[keyword.upper()]
 
 
@@ -19,8 +20,8 @@ def test_basic_answers():
     double_rep = mallard.process('квакря')
     assert basic_reply_is_valid(double_rep, 'КВА') or basic_reply_is_valid(double_rep, 'КРЯ')
 
-    assert mallard.process('абоба') is None
-    assert mallard.process('к в а') is None
+    assert mallard.process('абоба')[0] is None
+    assert mallard.process('к в а')[0] is None
 
 
 def test_basic_order():
@@ -31,7 +32,7 @@ def test_basic_order():
 def test_denial_answers():
     assert basic_reply_is_valid(mallard.process('миу'), 'МИУ', DENIAL_REPLIES_DICT)
     assert basic_reply_is_valid(mallard.process('миУ'), 'МИУ', DENIAL_REPLIES_DICT)
-    assert mallard.process('миy') is None
+    assert mallard.process('миy')[0] is None
 
 
 def test_miu_compatibility():
@@ -44,8 +45,9 @@ def test_miu_compatibility():
 def test_random_answers():
     cnt = 0
     for i in range(5000):
-        resp = mallard.process("aboba")
+        resp, is_sticker = mallard.process("aboba")
         if resp is not None:
-            assert resp in RANDOM_RESPONCES_DICT
+            assert (is_sticker is not True and resp in RANDOM_RESPONCES_DICT) or (
+                        is_sticker and resp in RANDOM_STICKERS)
             cnt += 1
     assert 0 < cnt < 50
