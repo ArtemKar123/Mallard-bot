@@ -23,12 +23,6 @@ def test_basic_answers():
     assert mallard.process('абоба')[0] is None
     assert mallard.process('к в а')[0] is None
 
-
-def test_basic_order():
-    assert basic_reply_is_valid(mallard.process('ква миу'), 'КВА')
-    assert basic_reply_is_valid(mallard.process('миуква'), 'КВА')
-
-
 def test_random_answers():
     cnt = 0
     for i in range(5000):
