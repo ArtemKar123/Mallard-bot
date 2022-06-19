@@ -1,5 +1,5 @@
 from mallard import Mallard
-from content.dictionaries import BASIC_REPLIES_DICT, DENIAL_REPLIES_DICT, RANDOM_RESPONCES_DICT, RANDOM_STICKERS
+from content.dictionaries import BASIC_REPLIES_DICT, RANDOM_RESPONCES_DICT, RANDOM_STICKERS
 
 mallard = Mallard()
 
@@ -27,19 +27,6 @@ def test_basic_answers():
 def test_basic_order():
     assert basic_reply_is_valid(mallard.process('ква миу'), 'КВА')
     assert basic_reply_is_valid(mallard.process('миуква'), 'КВА')
-
-
-def test_denial_answers():
-    assert basic_reply_is_valid(mallard.process('миу'), 'МИУ', DENIAL_REPLIES_DICT)
-    assert basic_reply_is_valid(mallard.process('миУ'), 'МИУ', DENIAL_REPLIES_DICT)
-    assert mallard.process('миy')[0] is None
-
-
-def test_miu_compatibility():
-    # checks that bot won't fight with miu bot forever
-    for reply in DENIAL_REPLIES_DICT['МИУ']:
-        assert 'МИУ' not in reply.upper()
-        assert 'МЯУ' not in reply.upper()
 
 
 def test_random_answers():
