@@ -9,7 +9,10 @@ mallard = Mallard(random_answer_rate=250)
 
 
 def echo(update: Update, context: CallbackContext):
-    reply, reply_is_sticker = mallard.process(update.message.text)
+    text = update.message.text if update.message.text is not None else update.message.caption
+    if text is None:
+        return
+    reply, reply_is_sticker = mallard.process(text)
     if reply is not None:
         if reply_is_sticker:
             context.bot.send_sticker(chat_id=update.effective_chat.id, sticker=reply,
@@ -24,8 +27,8 @@ def main():
     updater = Updater(token=token, use_context=True)
     dispatcher = updater.dispatcher
 
-    echo_handler = MessageHandler(Filters.text & (~Filters.command), echo)
-    dispatcher.add_handler(echo_handler)
+    handler = MessageHandler((Filters.text | Filters.caption) & (~Filters.command), echo)
+    dispatcher.add_handler(handler)
 
     print('STARTED')
     updater.start_polling(drop_pending_updates=True)
