@@ -52,7 +52,7 @@ def quote(update: Update, context: CallbackContext):
             return
         uid = str(uuid.uuid4())
         uid = uid.replace("-", "")
-        sticker_set_name = f"s{uid}_by_krya_test_bot"
+        sticker_set_name = f"s{uid}_by_cryakwa_bot"
 
         context.bot.create_new_sticker_set(update.message.from_user.id,
                                            sticker_set_name, "Sticker by @cryakwa_bot",
