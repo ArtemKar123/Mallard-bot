@@ -36,8 +36,8 @@ def file2animated_sticker(file_id: str, context: CallbackContext,
             new_h = 512
 
         print(new_w, new_h)
-        with tempfile.NamedTemporaryFile(suffix='.mov') as out_temp:
-            fourcc = cv2.VideoWriter_fourcc(*'h264')
+        with tempfile.NamedTemporaryFile(suffix='.mp4') as out_temp:
+            fourcc = cv2.VideoWriter_fourcc(*'mp4v')
             out = cv2.VideoWriter(out_temp.name, fourcc, 16, (new_w, new_h))
             frame_count = 0
             if preprocess_type == FilePreprocessType.circle:
