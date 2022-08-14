@@ -64,9 +64,8 @@ def video_quote(update: Update, context: CallbackContext):
             new_h = 512
 
         print(new_w, new_h)
-
-        with tempfile.NamedTemporaryFile() as out_temp:
-
+        sticker = None
+        with tempfile.NamedTemporaryFile(suffix='.webm') as out_temp:
             fourcc = cv2.VideoWriter_fourcc(*'vp90')
             out = cv2.VideoWriter(out_temp.name, fourcc, 10.0, (new_w, new_h))
             frame_count = 0
@@ -80,16 +79,19 @@ def video_quote(update: Update, context: CallbackContext):
 
             out.release()
             cap.release()
-            uid = str(uuid.uuid4())
-            uid = uid.replace("-", "")
-            sticker_set_name = f"s{uid}_by_cryakwa_bot"
-            # print(message.from_user.id)
-            context.bot.create_new_sticker_set(user_id=admin_id, name=sticker_set_name, title="Sticker by @cryakwa_bot",
-                                               webm_sticker=open(out_temp.name, 'rb'),
-                                               emojis="\U0001F60C")
-            sticker_set = context.bot.get_sticker_set(sticker_set_name)
-            update.message.reply_sticker(reply_to_message_id=update.effective_message.message_id,
-                                         sticker=sticker_set.stickers[-1])
+            sticker = BytesIO(out_temp.read())
+            sticker.seek(0)
+        if sticker is None:
+            return
+        uid = str(uuid.uuid4())
+        uid = uid.replace("-", "")
+        sticker_set_name = f"s{uid}_by_cryakwa_bot"
+        context.bot.create_new_sticker_set(user_id=admin_id, name=sticker_set_name, title="Sticker by @cryakwa_bot",
+                                           webm_sticker=sticker,
+                                           emojis="\U0001F60C")
+        sticker_set = context.bot.get_sticker_set(sticker_set_name)
+        update.message.reply_sticker(reply_to_message_id=update.effective_message.message_id,
+                                     sticker=sticker_set.stickers[-1])
 
     pass
 
