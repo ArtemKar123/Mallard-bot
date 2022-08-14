@@ -25,7 +25,7 @@ def file2animated_sticker(file_id: str, context: CallbackContext,
         w = int(cap.get(3))
         h = int(cap.get(4))
         fps = int(cap.get(5))
-
+        new_frames_count = (fps * 3 / 2) * (3 / 2)
         if w >= h:
             new_h = int(h * (512 / w))
             new_w = 512
@@ -40,7 +40,7 @@ def file2animated_sticker(file_id: str, context: CallbackContext,
             frame_count = 0
             if preprocess_type == FilePreprocessType.circle:
                 thresh = np.load('mask.dat', allow_pickle=True)
-            while frame_count < 45:
+            while frame_count < new_frames_count:
                 ret, frame = cap.read()
                 if not ret:
                     break
