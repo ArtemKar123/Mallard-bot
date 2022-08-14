@@ -4,7 +4,8 @@ import cv2
 import numpy as np
 from io import BytesIO
 import tempfile
-import ffmpeg
+import asyncio
+from ffmpeg import FFmpeg
 
 
 class FilePreprocessType(enum.Enum):
@@ -55,8 +56,15 @@ def file2animated_sticker(file_id: str, context: CallbackContext,
             out.release()
             cap.release()
             with tempfile.NamedTemporaryFile(suffix='.webm') as converted_temp:
-                ffmpeg.input(out_temp.name).output(converted_temp.name,
-                                                   **{'c:v': 'libvpx-vp9', 'pix_fmt': 'yuva420p'}).run()
+                ffmpeg = FFmpeg().option('y').input(
+                    out_temp.name
+                ).output(
+                    converted_temp.name,
+                    # Use a dictionary when an option name contains special characters
+                    {'codec:v': 'libvpx-vp9', 'pix_fmt': 'yuva420p'},
+                    f='mpegts',
+                )
+
                 sticker = BytesIO(converted_temp.read())
                 sticker.seek(0)
     return sticker
