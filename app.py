@@ -41,19 +41,16 @@ def command(update: Update, context: CallbackContext):
 def video_quote(update: Update, context: CallbackContext):
     message = update.message
 
-    file_id = None
     sticker = None
     if (original_message := message.reply_to_message) is not None:
-        if (original_message := message.reply_to_message) is not None:
-            if (video_note := original_message.video_note) is not None:  # circle video
-                if (thumb := video_note.thumb) is not None:
-                    if (file_id := thumb.file_id) is not None:
-                        sticker = file2animated_sticker(file_id, context, preprocess_type=FilePreprocessType.circle)
-            elif (
-                    video := original_message.document if original_message.document is not None else original_message.video) is not None:  # circle video
-                if video.file_size > 10485760:  # 10mb
-                    return
-                sticker = file2animated_sticker(video.file_id, context, preprocess_type=FilePreprocessType.video_thumb)
+        if (video_note := original_message.video_note) is not None:  # circle video
+            if (file_id := video_note.file_id) is not None:
+                sticker = file2animated_sticker(file_id, context, preprocess_type=FilePreprocessType.circle)
+        elif (
+                video := original_message.document if original_message.document is not None else original_message.video) is not None:  # circle video
+            if video.file_size > 10485760:  # 10mb
+                return
+            sticker = file2animated_sticker(video.file_id, context, preprocess_type=FilePreprocessType.video_thumb)
     if sticker is None:
         return
     uid = str(uuid.uuid4())
