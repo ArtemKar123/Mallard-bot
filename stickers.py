@@ -64,7 +64,7 @@ def file2animated_sticker(file_id: str, context: CallbackContext,
                     {'codec:v': 'libvpx-vp9', 'pix_fmt': 'yuva420p'},
                     f='mpegts',
                 )
-
+                await asyncio.run(ffmpeg.execute())
                 sticker = BytesIO(converted_temp.read())
                 sticker.seek(0)
     return sticker
