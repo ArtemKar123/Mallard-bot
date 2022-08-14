@@ -9,6 +9,8 @@ import tempfile
 import asyncio
 from ffmpeg import FFmpeg
 
+from vidgear.gears import WriteGear
+
 
 class FilePreprocessType(enum.Enum):
     none = 0
@@ -38,9 +40,11 @@ def file2animated_sticker(file_id: str, context: CallbackContext,
             new_h = 512
 
         print(new_w, new_h)
-        with tempfile.NamedTemporaryFile(suffix='.mp4') as out_temp:
-            fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-            out = cv2.VideoWriter(out_temp.name, fourcc, fps, (new_w, new_h))
+        output_params = {"-vcodec": "libvpx-vp9", "-pix_fmt": 'yuva420p', }
+        with tempfile.NamedTemporaryFile(suffix='.webm') as out_temp:
+
+            writer = WriteGear(output_filename=out_temp.name, compression_mode=True, logging=True,
+                               **output_params)  # Define writer with output filename 'Output.mp4'
             frame_count = 0
             if preprocess_type == FilePreprocessType.circle:
                 thresh = np.load('mask.dat', allow_pickle=True)
@@ -56,15 +60,11 @@ def file2animated_sticker(file_id: str, context: CallbackContext,
                 if preprocess_type == FilePreprocessType.circle:
                     image = cv2.cvtColor(image, cv2.COLOR_RGB2RGBA)
                     image = cv2.bitwise_and(image, image, mask=thresh)
-                out.write(frame)
+                writer.write(frame)
 
-            out.release()
             cap.release()
-            with tempfile.NamedTemporaryFile(suffix='.webm') as converted_temp:
-                subprocess.call(f'ffmpeg -i {out_temp.name} -c:v libvpx-vp9 -pix_fmt yuva420p {converted_temp.name}',
-                                shell=True)
-                sticker = BytesIO(converted_temp.read())
-                sticker.seek(0)
+            sticker = BytesIO(out_temp.read())
+            sticker.seek(0)
     return sticker
 
 
