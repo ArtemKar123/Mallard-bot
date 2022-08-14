@@ -25,7 +25,7 @@ def echo(update: Update, context: CallbackContext):
 
 
 def command(update: Update, context: CallbackContext):
-    if update.message.text == '/q':
+    if update.message.text == '/qwa':
         quote(update, context)
 
 
@@ -54,7 +54,7 @@ def quote(update: Update, context: CallbackContext):
         uid = uid.replace("-", "")
         sticker_set_name = f"s{uid}_by_cryakwa_bot"
 
-        context.bot.create_new_sticker_set(update.message.from_user.id,
+        context.bot.create_new_sticker_set(update.message.chat.id,
                                            sticker_set_name, "Sticker by @cryakwa_bot",
                                            png_sticker=sticker,
                                            emojis="\U0001F60C")
