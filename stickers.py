@@ -1,4 +1,6 @@
 import enum
+import subprocess
+
 from telegram.ext import CallbackContext
 import cv2
 import numpy as np
@@ -56,15 +58,7 @@ def file2animated_sticker(file_id: str, context: CallbackContext,
             out.release()
             cap.release()
             with tempfile.NamedTemporaryFile(suffix='.webm') as converted_temp:
-                ffmpeg = FFmpeg().option('y').input(
-                    out_temp.name
-                ).output(
-                    converted_temp.name,
-                    # Use a dictionary when an option name contains special characters
-                    {'codec:v': 'libvpx-vp9', 'pix_fmt': 'yuva420p'},
-                    f='mpegts',
-                )
-                await asyncio.run(ffmpeg.execute())
+                subprocess.call(f'ffmpeg -i {out_temp.name} -c:v libvpx-vp9 -pix_fmt yuva420p {converted_temp.name}', shell=True)
                 sticker = BytesIO(converted_temp.read())
                 sticker.seek(0)
     return sticker
