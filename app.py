@@ -9,6 +9,9 @@ from stickers import file2sticker, FilePreprocessType
 
 mallard = Mallard(random_answer_rate=250)
 
+token = os.environ.get('TG_API_KEY')
+admin_id = os.environ.get('TG_ADMIN_ID')
+
 
 def echo(update: Update, context: CallbackContext):
     text = update.message.text if update.message.text is not None else update.message.caption
@@ -31,6 +34,7 @@ def command(update: Update, context: CallbackContext):
 
 def quote(update: Update, context: CallbackContext):
     message = update.message
+    # print(message)
     if (False):  # TODO: check if quotly is in chat
         pass
     else:
@@ -53,9 +57,8 @@ def quote(update: Update, context: CallbackContext):
         uid = str(uuid.uuid4())
         uid = uid.replace("-", "")
         sticker_set_name = f"s{uid}_by_cryakwa_bot"
-
-        context.bot.create_new_sticker_set(update.message.chat.id,
-                                           sticker_set_name, "Sticker by @cryakwa_bot",
+        # print(message.from_user.id)
+        context.bot.create_new_sticker_set(user_id=admin_id, name=sticker_set_name, title="Sticker by @cryakwa_bot",
                                            png_sticker=sticker,
                                            emojis="\U0001F60C")
         sticker_set = context.bot.get_sticker_set(sticker_set_name)
@@ -64,7 +67,6 @@ def quote(update: Update, context: CallbackContext):
 
 
 def main():
-    token = os.environ.get('TG_API_KEY')
     updater = Updater(token=token, use_context=True)
     dispatcher = updater.dispatcher
 
