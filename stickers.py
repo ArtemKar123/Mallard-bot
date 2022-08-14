@@ -28,6 +28,8 @@ def file2animated_sticker(file_id: str, context: CallbackContext,
         cap = cv2.VideoCapture(temp.name)
         w = int(cap.get(3))
         h = int(cap.get(4))
+        fps = int(cap.get(5))
+        new_frames_count = (fps * 3 / 2) * (3 / 2)
         if w >= h:
             new_h = int(h * (512 / w))
             new_w = 512
@@ -38,11 +40,11 @@ def file2animated_sticker(file_id: str, context: CallbackContext,
         print(new_w, new_h)
         with tempfile.NamedTemporaryFile(suffix='.mp4') as out_temp:
             fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-            out = cv2.VideoWriter(out_temp.name, fourcc, 16, (new_w, new_h))
+            out = cv2.VideoWriter(out_temp.name, fourcc, fps, (new_w, new_h))
             frame_count = 0
             if preprocess_type == FilePreprocessType.circle:
                 thresh = np.load('mask.dat', allow_pickle=True)
-            while frame_count < 45:
+            while frame_count < new_frames_count:
                 ret, frame = cap.read()
                 if not ret:
                     break
@@ -52,13 +54,15 @@ def file2animated_sticker(file_id: str, context: CallbackContext,
 
                 frame = cv2.resize(frame, (new_w, new_h))
                 if preprocess_type == FilePreprocessType.circle:
-                    frame[thresh == 0] = (0, 0, 0)
+                    image = cv2.cvtColor(image, cv2.COLOR_RGB2RGBA)
+                    image = cv2.bitwise_and(image, image, mask=thresh)
                 out.write(frame)
 
             out.release()
             cap.release()
             with tempfile.NamedTemporaryFile(suffix='.webm') as converted_temp:
-                subprocess.call(f'ffmpeg -i {out_temp.name} -c:v libvpx-vp9 -pix_fmt yuva420p {converted_temp.name}', shell=True)
+                subprocess.call(f'ffmpeg -i {out_temp.name} -c:v libvpx-vp9 -pix_fmt yuva420p {converted_temp.name}',
+                                shell=True)
                 sticker = BytesIO(converted_temp.read())
                 sticker.seek(0)
     return sticker

@@ -55,7 +55,8 @@ def video_quote(update: Update, context: CallbackContext):
         return
     uid = str(uuid.uuid4())
     uid = uid.replace("-", "")
-    sticker_set_name = f"s{uid}_by_cryakwa_bot"
+
+    sticker_set_name = f"s{uid}_by_{context.bot.name[1:]}"
     context.bot.create_new_sticker_set(user_id=admin_id, name=sticker_set_name, title="Sticker by @cryakwa_bot",
                                        webm_sticker=sticker,
                                        emojis="\U0001F60C")
@@ -92,7 +93,7 @@ def quote(update: Update, context: CallbackContext):
         return
     uid = str(uuid.uuid4())
     uid = uid.replace("-", "")
-    sticker_set_name = f"s{uid}_by_cryakwa_bot"
+    sticker_set_name = f"s{uid}_by_{context.bot.name[1:]}"
     context.bot.create_new_sticker_set(user_id=admin_id, name=sticker_set_name, title="Sticker by @cryakwa_bot",
                                        png_sticker=sticker,
                                        emojis="\U0001F60C")
