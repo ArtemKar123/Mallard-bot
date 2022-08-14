@@ -14,9 +14,10 @@ class FilePreprocessType(enum.Enum):
     default = 4
 
 
-def file2animated_sticker(file_id: str, context: CallbackContext):
+def file2animated_sticker(file_id: str, context: CallbackContext,
+                          preprocess_type: FilePreprocessType = FilePreprocessType.default) -> BytesIO:
     file_bytes = context.bot.getFile(file_id).download_as_bytearray()
-
+    sticker = None
     with tempfile.NamedTemporaryFile() as temp:
         temp.write(file_bytes)
 
@@ -30,19 +31,32 @@ def file2animated_sticker(file_id: str, context: CallbackContext):
             new_w = int(w * (512 / h))
             new_h = 512
 
-        cap.set(3, new_w)
-        cap.set(4, new_h)
-
-        fourcc = cv2.VideoWriter_fourcc(*'WEBM')
-        with tempfile.NamedTemporaryFile() as out_temp:
-            out = cv2.VideoWriter(out_temp, fourcc, 14.0, (new_w, new_h))
-            while True:
+        print(new_w, new_h)
+        with tempfile.NamedTemporaryFile(suffix='.webm') as out_temp:
+            fourcc = cv2.VideoWriter_fourcc(*'vp90')
+            out = cv2.VideoWriter(out_temp.name, fourcc, 20.0, (new_w, new_h))
+            frame_count = 0
+            if preprocess_type == FilePreprocessType.circle:
+                thresh = np.load('mask.dat', allow_pickle=True)
+            while frame_count < 45:
                 ret, frame = cap.read()
-                if frame.empty():
+                if not ret:
                     break
+                frame_count += 1
+                if frame_count % 3 == 0:
+                    continue
+
+                frame = cv2.resize(frame, (new_w, new_h))
+                if preprocess_type == FilePreprocessType.circle:
+                    image = cv2.cvtColor(image, cv2.COLOR_RGB2RGBA)
+                    image = cv2.bitwise_and(image, image, mask=thresh)
                 out.write(frame)
+
             out.release()
             cap.release()
+            sticker = BytesIO(out_temp.read())
+            sticker.seek(0)
+    return sticker
 
 
 def file2sticker(file_id: str, context: CallbackContext,

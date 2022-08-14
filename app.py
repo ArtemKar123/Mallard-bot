@@ -8,7 +8,7 @@ from telegram.ext import CallbackContext
 from telegram.ext import Updater
 from telegram.ext import MessageHandler, Filters
 from mallard import Mallard
-from stickers import file2sticker, FilePreprocessType
+from stickers import file2sticker, file2animated_sticker, FilePreprocessType
 import tempfile
 
 mallard = Mallard(random_answer_rate=250)
@@ -42,56 +42,29 @@ def video_quote(update: Update, context: CallbackContext):
     message = update.message
 
     file_id = None
+    sticker = None
     if (original_message := message.reply_to_message) is not None:
-        if (
-                video := original_message.document if original_message.document is not None else original_message.video) is not None:  # circle video
-            if video.file_size > 10485760:  # 10mb
-                return
-            file_id = video.file_id
-
-    file_bytes = context.bot.getFile(file_id).download_as_bytearray()
-    with tempfile.NamedTemporaryFile() as temp:
-        temp.write(file_bytes)
-
-        cap = cv2.VideoCapture(temp.name)
-        w = int(cap.get(3))  # float `width`
-        h = int(cap.get(4))
-        if w >= h:
-            new_h = int(h * (512 / w))
-            new_w = 512
-        else:
-            new_w = int(w * (512 / h))
-            new_h = 512
-
-        print(new_w, new_h)
-        sticker = None
-        with tempfile.NamedTemporaryFile(suffix='.webm') as out_temp:
-            fourcc = cv2.VideoWriter_fourcc(*'vp90')
-            out = cv2.VideoWriter(out_temp.name, fourcc, 10.0, (new_w, new_h))
-            frame_count = 0
-            while frame_count < 20:
-                ret, frame = cap.read()
-                if not ret:
-                    break
-                frame_count += 1
-                frame = cv2.resize(frame, (new_w, new_h))
-                out.write(frame)
-
-            out.release()
-            cap.release()
-            sticker = BytesIO(out_temp.read())
-            sticker.seek(0)
-        if sticker is None:
-            return
-        uid = str(uuid.uuid4())
-        uid = uid.replace("-", "")
-        sticker_set_name = f"s{uid}_by_cryakwa_bot"
-        context.bot.create_new_sticker_set(user_id=admin_id, name=sticker_set_name, title="Sticker by @cryakwa_bot",
-                                           webm_sticker=sticker,
-                                           emojis="\U0001F60C")
-        sticker_set = context.bot.get_sticker_set(sticker_set_name)
-        update.message.reply_sticker(reply_to_message_id=update.effective_message.message_id,
-                                     sticker=sticker_set.stickers[-1])
+        if (original_message := message.reply_to_message) is not None:
+            if (video_note := original_message.video_note) is not None:  # circle video
+                if (thumb := video_note.thumb) is not None:
+                    if (file_id := thumb.file_id) is not None:
+                        sticker = file2animated_sticker(file_id, context, preprocess_type=FilePreprocessType.circle)
+            elif (
+                    video := original_message.document if original_message.document is not None else original_message.video) is not None:  # circle video
+                if video.file_size > 10485760:  # 10mb
+                    return
+                sticker = file2animated_sticker(video.file_id, context, preprocess_type=FilePreprocessType.video_thumb)
+    if sticker is None:
+        return
+    uid = str(uuid.uuid4())
+    uid = uid.replace("-", "")
+    sticker_set_name = f"s{uid}_by_cryakwa_bot"
+    context.bot.create_new_sticker_set(user_id=admin_id, name=sticker_set_name, title="Sticker by @cryakwa_bot",
+                                       webm_sticker=sticker,
+                                       emojis="\U0001F60C")
+    sticker_set = context.bot.get_sticker_set(sticker_set_name)
+    update.message.reply_sticker(reply_to_message_id=update.effective_message.message_id,
+                                 sticker=sticker_set.stickers[-1])
 
     pass
 
@@ -122,8 +95,7 @@ def quote(update: Update, context: CallbackContext):
         return
     uid = str(uuid.uuid4())
     uid = uid.replace("-", "")
-    sticker_set_name = f"s{uid}_by_krya_test_bot"
-    # print(message.from_user.id)
+    sticker_set_name = f"s{uid}_by_cryakwa_bot"
     context.bot.create_new_sticker_set(user_id=admin_id, name=sticker_set_name, title="Sticker by @cryakwa_bot",
                                        png_sticker=sticker,
                                        emojis="\U0001F60C")
