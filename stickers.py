@@ -22,8 +22,10 @@ def file2animated_sticker(file_id: str, context: CallbackContext,
         temp.write(file_bytes)
 
         cap = cv2.VideoCapture(temp.name)
-        w = int(cap.get(3))  # float `width`
+        w = int(cap.get(3))
         h = int(cap.get(4))
+        fps = int(cap.get(5))
+
         if w >= h:
             new_h = int(h * (512 / w))
             new_w = 512
@@ -34,7 +36,7 @@ def file2animated_sticker(file_id: str, context: CallbackContext,
         print(new_w, new_h)
         with tempfile.NamedTemporaryFile(suffix='.webm') as out_temp:
             fourcc = cv2.VideoWriter_fourcc(*'vp90')
-            out = cv2.VideoWriter(out_temp.name, fourcc, 20.0, (new_w, new_h))
+            out = cv2.VideoWriter(out_temp.name, fourcc, fps, (new_w, new_h))
             frame_count = 0
             if preprocess_type == FilePreprocessType.circle:
                 thresh = np.load('mask.dat', allow_pickle=True)
