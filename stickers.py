@@ -4,6 +4,7 @@ import cv2
 import numpy as np
 from io import BytesIO
 import tempfile
+import ffmpeg
 
 
 class FilePreprocessType(enum.Enum):
@@ -32,8 +33,8 @@ def file2animated_sticker(file_id: str, context: CallbackContext,
             new_h = 512
 
         print(new_w, new_h)
-        with tempfile.NamedTemporaryFile(suffix='.webm') as out_temp:
-            fourcc = cv2.VideoWriter_fourcc(*'vp90')
+        with tempfile.NamedTemporaryFile(suffix='.mov') as out_temp:
+            fourcc = cv2.VideoWriter_fourcc(*'h264')
             out = cv2.VideoWriter(out_temp.name, fourcc, 16, (new_w, new_h))
             frame_count = 0
             if preprocess_type == FilePreprocessType.circle:
@@ -53,8 +54,11 @@ def file2animated_sticker(file_id: str, context: CallbackContext,
 
             out.release()
             cap.release()
-            sticker = BytesIO(out_temp.read())
-            sticker.seek(0)
+            with tempfile.NamedTemporaryFile(suffix='.webm') as converted_temp:
+                ffmpeg.input(out_temp.name).output(converted_temp.name,
+                                                   **{'c:v': 'libvpx-vp9', 'pix_fmt': 'yuva420p'}).run()
+                sticker = BytesIO(converted_temp.read())
+                sticker.seek(0)
     return sticker
 
 
