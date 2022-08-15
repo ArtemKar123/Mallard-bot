@@ -7,6 +7,8 @@ import numpy as np
 from io import BytesIO
 import tempfile
 import time
+from PIL import Image, ImageDraw, ImageFont, ImageFilter
+import random
 
 
 class FilePreprocessType(enum.Enum):
@@ -110,5 +112,61 @@ def file2sticker(file_id: str, context: CallbackContext,
 
     is_success, buffer = cv2.imencode(".png", image)
     sticker = BytesIO(buffer)
+    sticker.seek(0)
+    return sticker
+
+# FIXME: simple yet buggy, would be nice to make it any smarter.
+def quote2sticker(quote, author, fg='black', font_file=None, font_size=None, width=512,
+                  height=384):
+    colors = [(248, 205, 48), (75, 151, 75), (150, 112, 159), (211, 111, 76)]
+
+    quote = quote[:181]
+    sentence = f"{quote} - {author}"
+
+    quote = ImageFont.truetype(font_file if font_file else "fonts/JMH Typewriter-Bold.otf",
+                               font_size if font_size else 28)
+
+    img = Image.new("RGB", (width, height), color=(255, 255, 255))
+    background = Image.new("RGB", (width, height), color=(colors[random.randint(0, len(colors) - 1)]))
+
+    img_w, img_h = background.size
+    bg_w, bg_h = img.size
+    offset = ((bg_w - img_w) // 2, (bg_h - img_h) // 2)
+    bback = background.filter(ImageFilter.BLUR)
+    img.paste(bback, offset)
+
+    d = ImageDraw.Draw(img)
+
+    sum = 0
+    for letter in sentence:
+        sum += d.textsize(letter, font=quote)[0]
+    average_length_of_letter = sum / len(sentence)
+
+    number_of_letters_for_each_line = (width / 1.618) / average_length_of_letter
+    incrementer = 0
+    fresh_sentence = ""
+
+    for letter in sentence:
+        if letter == "-":
+            fresh_sentence += "\n\n" + letter
+        elif incrementer < number_of_letters_for_each_line:
+            fresh_sentence += letter
+        else:
+            if letter == " ":
+                fresh_sentence += "\n"
+                incrementer = 0
+            else:
+                fresh_sentence += letter
+        incrementer += 1
+    dim = d.textsize(fresh_sentence, font=quote)
+    x2 = dim[0]
+    y2 = dim[1]
+
+    qx = width / 2 - x2 / 2
+    qy = height / 2 - y2 / 2
+
+    d.text((qx, qy), fresh_sentence, align="center", font=quote, fill=fg)
+    sticker = BytesIO()
+    img.save(sticker, 'PNG')
     sticker.seek(0)
     return sticker

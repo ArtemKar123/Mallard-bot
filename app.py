@@ -4,7 +4,7 @@ from telegram.ext import CallbackContext
 from telegram.ext import Updater
 from telegram.ext import MessageHandler, Filters
 from mallard import Mallard
-from stickers import file2sticker, file2animated_sticker, FilePreprocessType
+from stickers import file2sticker, file2animated_sticker, quote2sticker, FilePreprocessType
 
 mallard = Mallard(random_answer_rate=250)
 
@@ -29,7 +29,7 @@ def echo(update: Update, context: CallbackContext):
 def command(update: Update, context: CallbackContext):
     if update.message.text == '/snap':  # you are going to my collection
         quote(update, context)
-    if update.message.text == '/qwa':
+    elif update.message.text == '/qwa' or update.message.text == '/qva':
         video_quote(update, context)
 
 
@@ -70,7 +70,10 @@ def quote(update: Update, context: CallbackContext):
     # print(message)
     sticker = None
     if (original_message := message.reply_to_message) is not None:
-        if (video_note := original_message.video_note) is not None:  # circle video
+        if (text := original_message.text) is not None:
+            author = original_message.from_user.full_name if original_message.from_user is not None and original_message.from_user.full_name is not None else 'unknown'
+            sticker = quote2sticker(text, author)
+        elif (video_note := original_message.video_note) is not None:  # circle video
             if (thumb := video_note.thumb) is not None:
                 if (file_id := thumb.file_id) is not None:
                     sticker = file2sticker(file_id, context, preprocess_type=FilePreprocessType.circle)
