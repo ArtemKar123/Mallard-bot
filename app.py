@@ -27,10 +27,21 @@ def echo(update: Update, context: CallbackContext):
 
 
 def command(update: Update, context: CallbackContext):
+    # print(update)
     if update.message.text == '/snap':  # you are going to my collection
         quote(update, context)
     elif update.message.text == '/qwa' or update.message.text == '/qva':
         video_quote(update, context)
+    elif update.message.text == f'/help{context.bot.name}':
+        help(update, context)
+
+
+def help(update: Update, context: CallbackContext):
+    reply = 'Кряква умеет превращать кружочки, гифки, видео и картинки в стикеры.\n' \
+            'Используйте /qva для анимированных стикеров и /snap для обычных.\n' \
+            'кря-кря.'
+    context.bot.send_message(chat_id=update.effective_chat.id, text=reply,
+                             reply_to_message_id=update.effective_message.message_id)
 
 
 def video_quote(update: Update, context: CallbackContext):
