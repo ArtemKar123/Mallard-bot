@@ -31,7 +31,7 @@ def file2animated_sticker(file_id: str, context: CallbackContext,
         w = int(cap.get(3))
         h = int(cap.get(4))
         fps = int(cap.get(5))
-        new_frames_count = (fps * 3 / 2) * (3 / 2)
+        new_frames_count = fps * 2
         if w >= h:
             new_h = int(h * (512 / w))
             new_w = 512
@@ -40,7 +40,7 @@ def file2animated_sticker(file_id: str, context: CallbackContext,
             new_h = 512
 
         print(new_w, new_h)
-        output_params = {"-vcodec": "libvpx-vp9", "-pix_fmt": 'yuva420p', }
+        output_params = {"-vcodec": "libvpx-vp9", "-pix_fmt": 'yuva420p', '-r': fps}
         with tempfile.NamedTemporaryFile(suffix='.webm') as out_temp:
 
             writer = WriteGear(output_filename=out_temp.name, compression_mode=True, logging=True,
@@ -53,8 +53,8 @@ def file2animated_sticker(file_id: str, context: CallbackContext,
                 if not ret:
                     break
                 frame_count += 1
-                if frame_count % 3 == 0:
-                    continue
+                #if frame_count % 3 == 0:
+                #    continue
 
                 frame = cv2.resize(frame, (new_w, new_h))
                 if preprocess_type == FilePreprocessType.circle:
