@@ -58,11 +58,12 @@ def file2animated_sticker(file_id: str, context: CallbackContext,
 
                 frame = cv2.resize(frame, (new_w, new_h))
                 if preprocess_type == FilePreprocessType.circle:
-                    image = cv2.cvtColor(image, cv2.COLOR_RGB2RGBA)
-                    image = cv2.bitwise_and(image, image, mask=thresh)
+                    frame = cv2.cvtColor(frame, cv2.COLOR_RGB2RGBA)
+                    frame = cv2.bitwise_and(frame, frame, mask=thresh)
                 writer.write(frame)
 
             cap.release()
+            writer.close()
             sticker = BytesIO(out_temp.read())
             sticker.seek(0)
     return sticker
