@@ -1,15 +1,10 @@
 import os
-import uuid
-from io import BytesIO
-
-import cv2
 from telegram import Update
 from telegram.ext import CallbackContext
 from telegram.ext import Updater
 from telegram.ext import MessageHandler, Filters
 from mallard import Mallard
 from stickers import file2sticker, file2animated_sticker, FilePreprocessType
-import tempfile
 
 mallard = Mallard(random_answer_rate=250)
 
@@ -32,9 +27,9 @@ def echo(update: Update, context: CallbackContext):
 
 
 def command(update: Update, context: CallbackContext):
-    if update.message.text == '/qwa':
+    if update.message.text == '/snap':  # you are going to my collection
         quote(update, context)
-    if update.message.text == '/krya':
+    if update.message.text == '/qwa':
         video_quote(update, context)
 
 
@@ -53,23 +48,26 @@ def video_quote(update: Update, context: CallbackContext):
             sticker = file2animated_sticker(video.file_id, context, preprocess_type=FilePreprocessType.video_thumb)
     if sticker is None:
         return
-    uid = str(uuid.uuid4())
-    uid = uid.replace("-", "")
 
-    sticker_set_name = f"s{uid}_by_{context.bot.name[1:]}"
-    context.bot.create_new_sticker_set(user_id=admin_id, name=sticker_set_name, title="Sticker by @cryakwa_bot",
-                                       webm_sticker=sticker,
-                                       emojis="\U0001F60C")
+    sticker_set_name = f"animated_stickerpack_by_{context.bot.name[1:]}"
+    # context.bot.create_new_sticker_set(user_id=admin_id, name=sticker_set_name, title='Sticker by @cryakwa_bot',
+    #                                    webm_sticker=sticker,
+    #                                    emojis="\U0001F60C")
+    context.bot.addStickerToSet(user_id=admin_id, name=sticker_set_name,
+                                webm_sticker=sticker,
+                                emojis="\U0001F60C")
     sticker_set = context.bot.get_sticker_set(sticker_set_name)
     update.message.reply_sticker(reply_to_message_id=update.effective_message.message_id,
                                  sticker=sticker_set.stickers[-1])
+    for sticker in sticker_set.stickers[1:]:
+        context.bot.delete_sticker_from_set(sticker.file_id)
 
     pass
 
 
 def quote(update: Update, context: CallbackContext):
     message = update.message
-    print(message)
+    # print(message)
     sticker = None
     if (original_message := message.reply_to_message) is not None:
         if (video_note := original_message.video_note) is not None:  # circle video
@@ -91,23 +89,26 @@ def quote(update: Update, context: CallbackContext):
                 sticker = file2sticker(file_id, context)
     if sticker is None:
         return
-    uid = str(uuid.uuid4())
-    uid = uid.replace("-", "")
-    sticker_set_name = f"s{uid}_by_{context.bot.name[1:]}"
-    context.bot.create_new_sticker_set(user_id=admin_id, name=sticker_set_name, title="Sticker by @cryakwa_bot",
-                                       png_sticker=sticker,
-                                       emojis="\U0001F60C")
+    sticker_set_name = f"image_stickerpack_by_{context.bot.name[1:]}"
+    # context.bot.create_new_sticker_set(user_id=admin_id, name=sticker_set_name, title='Sticker by @cryakwa_bot',
+    #                                    png_sticker=sticker,
+    #                                    emojis="\U0001F60C")
+    context.bot.addStickerToSet(user_id=admin_id, name=sticker_set_name,
+                                png_sticker=sticker,
+                                emojis="\U0001F60C")
     sticker_set = context.bot.get_sticker_set(sticker_set_name)
     update.message.reply_sticker(reply_to_message_id=update.effective_message.message_id,
                                  sticker=sticker_set.stickers[-1])
+    for sticker in sticker_set.stickers[1:]:
+        context.bot.delete_sticker_from_set(sticker.file_id)
 
 
 def main():
-    updater = Updater(token=token, use_context=True)
+    updater = Updater(token=token, use_context=True, workers=8)
     dispatcher = updater.dispatcher
 
-    handler = MessageHandler((Filters.text | Filters.caption) & (~Filters.command), echo)
-    command_handler = MessageHandler(Filters.command, command)
+    handler = MessageHandler((Filters.text | Filters.caption) & (~Filters.command), echo, run_async=True)
+    command_handler = MessageHandler(Filters.command, command, run_async=True)
     dispatcher.add_handler(handler)
     dispatcher.add_handler(command_handler)
 
