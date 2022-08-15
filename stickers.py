@@ -48,18 +48,21 @@ def file2animated_sticker(file_id: str, context: CallbackContext,
             frame_count = 0
             if preprocess_type == FilePreprocessType.circle:
                 thresh = np.load('mask.dat', allow_pickle=True)
+                frame_circle = np.load('frame.dat', allow_pickle=True)
             while frame_count < new_frames_count:
                 ret, frame = cap.read()
                 if not ret:
                     break
                 frame_count += 1
-                #if frame_count % 3 == 0:
+                # if frame_count % 3 == 0:
                 #    continue
 
                 frame = cv2.resize(frame, (new_w, new_h))
                 if preprocess_type == FilePreprocessType.circle:
                     frame = cv2.cvtColor(frame, cv2.COLOR_RGB2RGBA)
                     frame = cv2.bitwise_and(frame, frame, mask=thresh)
+                    blurred = cv2.GaussianBlur(frame, (10, 10), 0)
+                    frame = np.where(frame_circle == 255, blurred, frame)
                 writer.write(frame)
 
             cap.release()
