@@ -5,6 +5,8 @@ from telegram.ext import Updater
 from telegram.ext import MessageHandler, Filters
 from mallard import Mallard
 from stickers import file2sticker, file2animated_sticker, quote2sticker, FilePreprocessType
+from content.emoji_dict import EMOJI_LIST
+import random
 
 mallard = Mallard(random_answer_rate=250)
 
@@ -66,7 +68,7 @@ def video_quote(update: Update, context: CallbackContext):
     #                                    emojis="\U0001F60C")
     context.bot.addStickerToSet(user_id=admin_id, name=sticker_set_name,
                                 webm_sticker=sticker,
-                                emojis="\U0001F60C")
+                                emojis=EMOJI_LIST[random.randint(0, len(EMOJI_LIST) - 1)])
     sticker_set = context.bot.get_sticker_set(sticker_set_name)
     update.message.reply_sticker(reply_to_message_id=update.effective_message.message_id,
                                  sticker=sticker_set.stickers[-1])
@@ -109,7 +111,7 @@ def quote(update: Update, context: CallbackContext):
     #                                    emojis="\U0001F60C")
     context.bot.addStickerToSet(user_id=admin_id, name=sticker_set_name,
                                 png_sticker=sticker,
-                                emojis="\U0001F60C")
+                                emojis=EMOJI_LIST[random.randint(0, len(EMOJI_LIST) - 1)])
     sticker_set = context.bot.get_sticker_set(sticker_set_name)
     update.message.reply_sticker(reply_to_message_id=update.effective_message.message_id,
                                  sticker=sticker_set.stickers[-1])
