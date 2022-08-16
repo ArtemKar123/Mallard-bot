@@ -84,7 +84,11 @@ def quote(update: Update, context: CallbackContext):
     sticker = None
     if (original_message := message.reply_to_message) is not None:
         if (text := original_message.text) is not None:
-            author = original_message.from_user.full_name if original_message.from_user is not None and original_message.from_user.full_name is not None else 'unknown'
+            author = 'unknown'
+            if original_message.forward_from is not None and original_message.forward_from.full_name is not None:
+                author = original_message.forward_from.full_name
+            elif original_message.from_user is not None and original_message.from_user.full_name is not None:
+                author = original_message.from_user.full_name
             sticker = quote2sticker(text, author)
         elif (video_note := original_message.video_note) is not None:  # circle video
             if (thumb := video_note.thumb) is not None:
@@ -120,7 +124,7 @@ def quote(update: Update, context: CallbackContext):
 
 
 def main():
-    updater = Updater(token=token, use_context=True, workers=8)
+    updater = Updater(token=token, use_context=True, workers=6)
     dispatcher = updater.dispatcher
 
     handler = MessageHandler((Filters.text | Filters.caption) & (~Filters.command), echo, run_async=True)

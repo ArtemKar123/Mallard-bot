@@ -59,7 +59,7 @@ def file2animated_sticker(file_id: str, context: CallbackContext,
                             -preset ultrafast \
                             -r {fps} \
                             -s {new_w}x{new_h} \
-                            -t 2 \
+                            -t 2.8 \
                             -an \
                             {out_temp.name}'
                     print(query)
@@ -68,7 +68,7 @@ def file2animated_sticker(file_id: str, context: CallbackContext,
                                     shell=True)
             else:
                 subprocess.call(
-                    f'ffmpeg -nostats -loglevel error -y -i {temp.name} -c:v libvpx-vp9 -pix_fmt yuva420p -preset ultrafast -r {fps} -s {new_w}x{new_h} -t 2 {out_temp.name}',
+                    f'ffmpeg -nostats -loglevel error -y -i {temp.name} -c:v libvpx-vp9 -pix_fmt yuva420p -preset ultrafast -r {fps} -s {new_w}x{new_h} -t 2.8 {out_temp.name}',
                     shell=True)
 
             sticker = BytesIO(out_temp.read())
@@ -119,8 +119,8 @@ def file2sticker(file_id: str, context: CallbackContext,
 def quote2sticker(quote, author, fg='black', font_file=None, font_size=None, width=512,
                   height=384):
     colors = [(248, 205, 48), (75, 151, 75), (150, 112, 159), (211, 111, 76)]
-
-    quote = quote[:181]
+    quote_text = quote[:181]
+    quote = quote_text
     sentence = f"{quote} - {author}"
 
     quote = ImageFont.truetype(font_file if font_file else "fonts/JMH Typewriter-Bold.otf",
@@ -146,10 +146,8 @@ def quote2sticker(quote, author, fg='black', font_file=None, font_size=None, wid
     incrementer = 0
     fresh_sentence = ""
 
-    for letter in sentence:
-        if letter == "-":
-            fresh_sentence += "\n\n" + letter
-        elif incrementer < number_of_letters_for_each_line:
+    for letter in quote_text:
+        if incrementer < number_of_letters_for_each_line:
             fresh_sentence += letter
         else:
             if letter == " ":
@@ -158,6 +156,18 @@ def quote2sticker(quote, author, fg='black', font_file=None, font_size=None, wid
             else:
                 fresh_sentence += letter
         incrementer += 1
+    fresh_sentence += "\n\n— "
+    for letter in author:
+        if incrementer < number_of_letters_for_each_line:
+            fresh_sentence += letter
+        else:
+            if letter == " ":
+                fresh_sentence += "\n"
+                incrementer = 0
+            else:
+                fresh_sentence += letter
+        incrementer += 1
+
     dim = d.textsize(fresh_sentence, font=quote)
     x2 = dim[0]
     y2 = dim[1]
