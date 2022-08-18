@@ -47,7 +47,15 @@ def help(update: Update, context: CallbackContext):
 
 
 def video_quote(update: Update, context: CallbackContext):
+    waiting_text = "Ваш запрос очень важен для нас, оставайтесь на линии!"
     message = update.message
+    wait_message = message.reply_text(text=waiting_text)
+
+    def on_return(success: bool):
+        if success:
+            wait_message.delete()
+        else:
+            wait_message.edit_text(text="Ха-ха смотрите Артем КарКарКар омеж")
 
     sticker = None
     if (original_message := message.reply_to_message) is not None:
@@ -55,11 +63,14 @@ def video_quote(update: Update, context: CallbackContext):
             if (file_id := video_note.file_id) is not None:
                 sticker = file2animated_sticker(file_id, context, preprocess_type=FilePreprocessType.circle)
         elif (
-                video := original_message.document if original_message.document is not None else original_message.video) is not None:  # circle video
+                video := original_message.document if original_message.document is not None
+                else original_message.video) is not None:  # circle video
             if video.file_size > 10485760:  # 10mb
+                on_return(False)
                 return
             sticker = file2animated_sticker(video.file_id, context, preprocess_type=FilePreprocessType.video_thumb)
     if sticker is None:
+        on_return(True)
         return
 
     sticker_set_name = f"animated_stickerpack_by_{context.bot.name[1:]}"
@@ -75,7 +86,7 @@ def video_quote(update: Update, context: CallbackContext):
     for sticker in sticker_set.stickers[1:]:
         context.bot.delete_sticker_from_set(sticker.file_id)
 
-    pass
+    on_return(True)
 
 
 def quote(update: Update, context: CallbackContext):
