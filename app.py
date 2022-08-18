@@ -3,15 +3,24 @@ from telegram import Update
 from telegram.ext import CallbackContext
 from telegram.ext import Updater
 from telegram.ext import MessageHandler, Filters
+import telegram
 from mallard import Mallard
 from stickers import file2sticker, file2animated_sticker, quote2sticker, FilePreprocessType
 from content.emoji_dict import EMOJI_LIST
 import random
+import enum
 
 mallard = Mallard(random_answer_rate=250)
 
 token = os.environ.get('TG_API_KEY')
 admin_id = os.environ.get('TG_ADMIN_ID')
+
+
+class ProcessingErrorType(enum.Enum):
+    none = 0
+    file_too_large = 1
+    unexpected = 2
+    wrong_source_type = 3
 
 
 def echo(update: Update, context: CallbackContext):
@@ -46,31 +55,52 @@ def help(update: Update, context: CallbackContext):
                              reply_to_message_id=update.effective_message.message_id)
 
 
+def on_quote_return(original_message: telegram.message = None, wait_message: telegram.message = None,
+                    success: bool = True,
+                    error: ProcessingErrorType = ProcessingErrorType.unexpected):
+    if success:
+        if wait_message is not None:
+            wait_message.delete()
+    else:
+        reply_text = 'Не ква!\n'
+        if error == ProcessingErrorType.file_too_large:
+            reply_text += 'Файл слишком большой :('
+        elif error == ProcessingErrorType.wrong_source_type:
+            reply_text += 'Я такое квотить не умею :('
+        if wait_message is not None:
+            wait_message.edit_text(text=reply_text)
+        elif original_message is not None:
+            original_message.reply_text(text=reply_text)
+
+
 def video_quote(update: Update, context: CallbackContext):
-    waiting_text = "Ваш запрос очень важен для нас, оставайтесь на линии!"
+    waiting_text = "Ваш запрос очень кважен для нас, оставайтесь на линии!"
     message = update.message
     wait_message = message.reply_text(text=waiting_text)
 
-    def on_return(success: bool):
-        if success:
-            wait_message.delete()
-        else:
-            wait_message.edit_text(text="Ха-ха смотрите Артем КарКарКар омеж")
-
     sticker = None
-    if (original_message := message.reply_to_message) is not None:
-        if (video_note := original_message.video_note) is not None:  # circle video
-            if (file_id := video_note.file_id) is not None:
-                sticker = file2animated_sticker(file_id, context, preprocess_type=FilePreprocessType.circle)
-        elif (
-                video := original_message.document if original_message.document is not None
-                else original_message.video) is not None:  # circle video
-            if video.file_size > 10485760:  # 10mb
-                on_return(False)
+    try:
+        if (original_message := message.reply_to_message) is not None:
+            if (video_note := original_message.video_note) is not None:  # circle video
+                if (file_id := video_note.file_id) is not None:
+                    sticker = file2animated_sticker(file_id, context, preprocess_type=FilePreprocessType.circle)
+            elif (
+                    video := original_message.document if original_message.document is not None
+                    else original_message.video) is not None:
+                if video.file_size > 10485760:  # 10mb
+                    on_quote_return(wait_message=wait_message, success=False, error=ProcessingErrorType.file_too_large)
+                    return
+                sticker = file2animated_sticker(video.file_id, context, preprocess_type=FilePreprocessType.video_thumb)
+            else:
+                on_quote_return(wait_message=wait_message, success=False, error=ProcessingErrorType.wrong_source_type)
                 return
-            sticker = file2animated_sticker(video.file_id, context, preprocess_type=FilePreprocessType.video_thumb)
+    except Exception as e:
+        print(e)
+        on_quote_return(wait_message=wait_message, success=False)
+        return
+
     if sticker is None:
-        on_return(True)
+        on_quote_return(wait_message=wait_message, success=False)
         return
 
     sticker_set_name = f"animated_stickerpack_by_{context.bot.name[1:]}"
@@ -86,40 +116,51 @@ def video_quote(update: Update, context: CallbackContext):
     for sticker in sticker_set.stickers[1:]:
         context.bot.delete_sticker_from_set(sticker.file_id)
 
-    on_return(True)
+    on_quote_return(wait_message=wait_message, success=True)
 
 
 def quote(update: Update, context: CallbackContext):
     message = update.message
     # print(message)
     sticker = None
-    if (original_message := message.reply_to_message) is not None:
-        if (text := original_message.text) is not None:
-            author = 'unknown'
-            if original_message.forward_from is not None and original_message.forward_from.full_name is not None:
-                author = original_message.forward_from.full_name
-            elif original_message.from_user is not None and original_message.from_user.full_name is not None:
-                author = original_message.from_user.full_name
-            sticker = quote2sticker(text, author)
-        elif (video_note := original_message.video_note) is not None:  # circle video
-            if (thumb := video_note.thumb) is not None:
-                if (file_id := thumb.file_id) is not None:
-                    sticker = file2sticker(file_id, context, preprocess_type=FilePreprocessType.circle)
-        elif (
-                video := original_message.document if original_message.document is not None else original_message.video) is not None:  # circle video
-            if (thumb := video.thumb) is not None:
-                if (file_id := thumb.file_id) is not None:
+    try:
+        if (original_message := message.reply_to_message) is not None:
+            if (text := original_message.text) is not None:
+                author = 'unknown'
+                if original_message.forward_from is not None and original_message.forward_from.full_name is not None:
+                    author = original_message.forward_from.full_name
+                elif original_message.from_user is not None and original_message.from_user.full_name is not None:
+                    author = original_message.from_user.full_name
+                sticker = quote2sticker(text, author)
+            elif (video_note := original_message.video_note) is not None:  # circle video
+                if (thumb := video_note.thumb) is not None:
+                    if (file_id := thumb.file_id) is not None:
+                        sticker = file2sticker(file_id, context, preprocess_type=FilePreprocessType.circle)
+            elif (
+                    video := original_message.document if original_message.document is not None else original_message.video) is not None:  # circle video
+                if (thumb := video.thumb) is not None:
+                    if (file_id := thumb.file_id) is not None:
+                        sticker = file2sticker(file_id, context)
+                else:
+                    if video.file_size > 10485760:  # 10mb
+                        on_quote_return(original_message=message, success=False,
+                                        error=ProcessingErrorType.file_too_large)
+                        return
+                    sticker = file2sticker(video.file_id, context, preprocess_type=FilePreprocessType.video_thumb)
+            elif (photo := original_message.photo) is not None and len(photo) > 0:
+                if (file_id := photo[-1].file_id) is not None:
                     sticker = file2sticker(file_id, context)
             else:
-                if video.file_size > 10485760:  # 10mb
-                    return
-                sticker = file2sticker(video.file_id, context, preprocess_type=FilePreprocessType.video_thumb)
-
-        elif (photo := original_message.photo) is not None and len(photo) > 0:
-            if (file_id := photo[-1].file_id) is not None:
-                sticker = file2sticker(file_id, context)
-    if sticker is None:
+                on_quote_return(original_message=message, success=False, error=ProcessingErrorType.wrong_source_type)
+                return
+    except Exception as e:
+        print(e)
+        on_quote_return(original_message=message, success=False)
         return
+    if sticker is None:
+        on_quote_return(original_message=message, success=False)
+        return
+
     sticker_set_name = f"image_stickerpack_by_{context.bot.name[1:]}"
     # context.bot.create_new_sticker_set(user_id=admin_id, name=sticker_set_name, title='Sticker by @cryakwa_bot',
     #                                    png_sticker=sticker,
