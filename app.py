@@ -43,9 +43,14 @@ def command(update: Update, context: CallbackContext):
 
 
 def help(update: Update, context: CallbackContext):
-    reply = 'Кряква умеет превращать кружочки, гифки, видео и картинки в стикеры.\n' \
-            'Используйте /qva для анимированных стикеров и /snap для обычных.\n' \
-            'кря-кря.'
+    reply = 'Кряква умеет превращать кружочки, гифки, видео и картинки в стикеры.\n\
+Используйте /qva для анимированных стикеров и /snap для обычных.\n\
+При использовании /qva вы также можете использовать параметры:\n\
+* s<sec> обрежет видео начиная с sec, sec должно быть целым\n\
+* e<sec> обрежет видео до sec, sec должно быть целым\n\
+* x<speed> изменит скорость видео на speed, speed может иметь вид 123.123\n\
+* например /qva s5 e7 x2.5 обрежет видео с 5 по 7 секунды и ускорит его в два с половиной раза\n\
+кря-кря.'
     context.bot.send_message(chat_id=update.effective_chat.id, text=reply,
                              reply_to_message_id=update.effective_message.message_id)
 
@@ -92,10 +97,10 @@ def parse_arguments(line: str) -> VideoQuoteArguments:
             raise ProcessingException(
                 exception_type=ProcessingException.ProcessingExceptionType.arguments_parsing_error,
                 additional_message=f'"{word}" не подходит как аргумент для команды.')
-        if counts.final_length == 1 and counts.speed == 1:
+        if counts.end_point == 1 and counts.starting_point == 0:
             raise ProcessingException(
                 exception_type=ProcessingException.ProcessingExceptionType.arguments_parsing_error,
-                additional_message=f'Параметры "x*" и "l*" не могут использоваться вместе, используйте что-то одно.')
+                additional_message=f'Параметр "e*" должен использоваться только вместе с "s*".')
 
     return result
 
