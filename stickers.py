@@ -30,6 +30,7 @@ class VideoQuoteArguments:
     end_point: int = None  # e
     speed: float = None  # x
     final_length: float = None  # l
+    reverse: bool = None  # r
 
 
 def file2animated_sticker(file_id: str, context: CallbackContext,
@@ -37,6 +38,7 @@ def file2animated_sticker(file_id: str, context: CallbackContext,
                           video_arguments: VideoQuoteArguments = VideoQuoteArguments()) -> BytesIO:
     file_bytes = context.bot.getFile(file_id).download_as_bytearray()
     sticker = None
+    original_arguments = video_arguments
     with tempfile.NamedTemporaryFile(suffix='.mp4') as temp:
         temp.write(file_bytes)
         t = time.time()
@@ -49,29 +51,43 @@ def file2animated_sticker(file_id: str, context: CallbackContext,
         # calculate duration of the video
         video_length_seconds = round(frames / fps)
 
+        if video_arguments.speed is None:
+            video_arguments.speed = 1
+
+        if original_arguments.end_point is not None and original_arguments.end_point <= original_arguments.starting_point:
+            raise ProcessingException(
+                exception_type=ProcessingException.ProcessingExceptionType.arguments_parsing_error,
+                additional_message='Секунда завершения должна быть строго больше секунды начала.')
+
+        if video_arguments.reverse is None:
+            video_arguments.reverse = False
+
         if video_arguments.starting_point is None:
             video_arguments.starting_point = 0
         elif video_arguments.starting_point > video_length_seconds:
             raise ProcessingException(
                 exception_type=ProcessingException.ProcessingExceptionType.arguments_parsing_error,
                 additional_message='Секунда начала должна быть меньше чем длина видео.')
-        if video_arguments.speed is None:
-            video_arguments.speed = 1
+        else:
+
+            if video_arguments.reverse:
+                video_arguments.starting_point = video_length_seconds - video_arguments.starting_point
+
+            video_arguments.starting_point = round(
+                video_arguments.starting_point * float(1 / video_arguments.speed))
+
         if video_arguments.final_length is None:
             video_arguments.final_length = 2.9
 
-        if video_arguments.end_point is not None and video_arguments.end_point <= video_arguments.starting_point:
-            raise ProcessingException(
-                exception_type=ProcessingException.ProcessingExceptionType.arguments_parsing_error,
-                additional_message='Секунда завершения должна быть строго больше секунды начала.')
-
-        video_arguments.starting_point = round(
-            video_arguments.starting_point * float(1 / video_arguments.speed))
-
         if video_arguments.end_point is not None:
-            video_arguments.end_point = max(video_arguments.starting_point + float(1 / video_arguments.speed),
-                                            round(video_arguments.end_point * float(1 / video_arguments.speed)))
-            video_arguments.final_length = (video_arguments.end_point - video_arguments.starting_point)
+            if video_arguments.reverse:
+                video_arguments.end_point = video_length_seconds - video_arguments.end_point
+            video_arguments.end_point = round(video_arguments.end_point * float(1 / video_arguments.speed))
+            if video_arguments.reverse:
+                video_arguments.starting_point, video_arguments.end_point = video_arguments.end_point, video_arguments.starting_point
+
+            video_arguments.final_length = abs(video_arguments.end_point - video_arguments.starting_point)
+
         print(video_arguments.final_length)
         video_arguments.final_length = max(0.1, min(video_arguments.final_length, 2.9))
         if video_arguments.speed < 1:
@@ -99,13 +115,14 @@ def file2animated_sticker(file_id: str, context: CallbackContext,
                     mask[frame_circle == 255] = blurred[frame_circle == 255]
                     mask = cv2.resize(mask, (w, h))
                     cv2.imwrite(mask_temp.name, mask)
-
+                    filter_complex = f'-filter_complex "[1:v]alphaextract[alf];[0:v][alf]alphamerge[res];{"[res]reverse[res];" if video_arguments.reverse else ""}[res]setpts={float(1 / video_arguments.speed):.2f}*PTS"'
                     query = f'ffmpeg -nostats \
                             -loglevel error \
                             -y \
                             -i {temp.name} \
                             -loop 1 \
-                            -i {mask_temp.name} -filter_complex "[1:v]alphaextract[alf];[0:v][alf]alphamerge[res];[res]setpts={float(1 / video_arguments.speed):.2f}*PTS"\
+                            -i {mask_temp.name} \
+                            {filter_complex} \
                             -c:v libvpx-vp9 -auto-alt-ref 0 \
                             -preset ultrafast \
                             -ss 00:00:{starting_second} '
@@ -124,6 +141,9 @@ def file2animated_sticker(file_id: str, context: CallbackContext,
                                     ,
                                     shell=True)
             else:
+                v_filter = f"setpts={float(1 / video_arguments.speed):.2f}*PTS"
+                if video_arguments.reverse:
+                    v_filter += ',reverse '
                 print('Starting from', starting_second)
                 query = f'ffmpeg -nostats \
                     -loglevel error \
@@ -139,7 +159,7 @@ def file2animated_sticker(file_id: str, context: CallbackContext,
                         ending_point = '0' + ending_point
                     query += f'-to 00:00:{ending_point} '
                 query += f'-r {fps} \
-                    -filter:v "setpts={float(1 / video_arguments.speed):.2f}*PTS" \
+                    -filter:v {v_filter} \
                     -s {new_w}x{new_h} \
                     -t {video_arguments.final_length} {out_temp.name}'
                 print(query)

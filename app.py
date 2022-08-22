@@ -49,7 +49,8 @@ def help(update: Update, context: CallbackContext):
 * s<sec> обрежет видео начиная с sec, sec должно быть целым\n\
 * e<sec> обрежет видео до sec, sec должно быть целым\n\
 * x<speed> изменит скорость видео на speed, speed может иметь вид 123.123\n\
-* например /qva s5 e7 x2.5 обрежет видео с 5 по 7 секунды и ускорит его в два с половиной раза\n\
+* r — если указан, видео будет инвертировано\n\
+* например /qva s5 e7 x2.5 r обрежет видео с 5 по 7 секунды, инвертирует полученный фрагмент и ускорит его в два с половиной раза\n\
 кря-кря.'
     context.bot.send_message(chat_id=update.effective_chat.id, text=reply,
                              reply_to_message_id=update.effective_message.message_id)
@@ -93,6 +94,14 @@ def parse_arguments(line: str) -> VideoQuoteArguments:
                     exception_type=ProcessingException.ProcessingExceptionType.arguments_parsing_error,
                     additional_message="Несколько вхождений аргумента 'x*', не знаю, что делать :(")
             result.speed = float(it.string[1:])
+        elif word == 'r':
+            if counts.reverse is None:
+                counts.reverse = True
+            else:
+                raise ProcessingException(
+                    exception_type=ProcessingException.ProcessingExceptionType.arguments_parsing_error,
+                    additional_message="Несколько вхождений аргумента 'r*', не знаю, что делать :(")
+            result.reverse = True
         else:
             raise ProcessingException(
                 exception_type=ProcessingException.ProcessingExceptionType.arguments_parsing_error,
