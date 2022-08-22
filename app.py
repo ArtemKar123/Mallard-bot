@@ -8,19 +8,14 @@ from mallard import Mallard
 from stickers import file2sticker, file2animated_sticker, quote2sticker, FilePreprocessType
 from content.emoji_dict import EMOJI_LIST
 import random
-import enum
+import re
+from stickers import VideoQuoteArguments
+from exceptions import ProcessingException
 
 mallard = Mallard(random_answer_rate=250)
 
 token = os.environ.get('TG_API_KEY')
 admin_id = os.environ.get('TG_ADMIN_ID')
-
-
-class ProcessingErrorType(enum.Enum):
-    none = 0
-    file_too_large = 1
-    unexpected = 2
-    wrong_source_type = 3
 
 
 def echo(update: Update, context: CallbackContext):
@@ -41,7 +36,7 @@ def command(update: Update, context: CallbackContext):
     # print(update)
     if update.message.text == '/snap':  # you are going to my collection
         quote(update, context)
-    elif update.message.text == '/qwa' or update.message.text == '/qva':
+    elif update.message.text[:4] == '/qwa' or update.message.text[:4] == '/qva':
         video_quote(update, context)
     elif update.message.text == f'/help{context.bot.name}':
         help(update, context)
@@ -55,52 +50,91 @@ def help(update: Update, context: CallbackContext):
                              reply_to_message_id=update.effective_message.message_id)
 
 
-def on_quote_return(original_message: telegram.message = None, wait_message: telegram.message = None,
-                    success: bool = True,
-                    error: ProcessingErrorType = ProcessingErrorType.unexpected):
-    if success:
-        if wait_message is not None:
-            wait_message.delete()
-    else:
-        reply_text = 'Не ква!\n'
-        if error == ProcessingErrorType.file_too_large:
-            reply_text += 'Файл слишком большой :('
-        elif error == ProcessingErrorType.wrong_source_type:
-            reply_text += 'Я такое квотить не умею :('
-        if wait_message is not None:
-            wait_message.edit_text(text=reply_text)
-        elif original_message is not None:
-            original_message.reply_text(text=reply_text)
+def edit_exception(wait_message: telegram.message = None, exception: ProcessingException = None):
+    if wait_message is not None and exception is not None:
+        wait_message.edit_text(text=str(exception))
+
+
+def reply_exception(reply_message: telegram.message = None, exception: ProcessingException = None,
+                    context: CallbackContext = None, update: Update = None):
+    if reply_message is not None and exception is not None and context is not None and update is not None:
+        context.bot.send_message(chat_id=update.effective_chat.id, text=reply_message,
+                                 reply_to_message_id=update.effective_message.message_id)
+
+
+def parse_arguments(line: str) -> VideoQuoteArguments:
+    result = VideoQuoteArguments()
+    counts = VideoQuoteArguments(0, 0, 0)
+    words = line.split()
+    for word in words[1:]:
+        if (it := re.search(r's\d+', word)) is not None:
+            counts.starting_point += 1
+            if counts.starting_point > 1:
+                raise ProcessingException(
+                    exception_type=ProcessingException.ProcessingExceptionType.arguments_parsing_error,
+                    additional_message="Несколько вхождений аргумента 's*', не знаю, что делать :(")
+            result.starting_point = int(it.string[1:])
+        elif (it := re.search(r'e\d+', word)) is not None:
+            counts.end_point += 1
+            if counts.end_point > 1:
+                raise ProcessingException(
+                    exception_type=ProcessingException.ProcessingExceptionType.arguments_parsing_error,
+                    additional_message="Несколько вхождений аргумента 'e*', не знаю, что делать :(")
+            result.end_point = int(it.string[1:])
+        elif (it := re.search(r'x\d+\.?\d*', word)) is not None:
+            counts.speed = 1 if counts.speed is None else counts.speed + 1
+            if counts.speed > 1:
+                raise ProcessingException(
+                    exception_type=ProcessingException.ProcessingExceptionType.arguments_parsing_error,
+                    additional_message="Несколько вхождений аргумента 'x*', не знаю, что делать :(")
+            result.speed = float(it.string[1:])
+        else:
+            raise ProcessingException(
+                exception_type=ProcessingException.ProcessingExceptionType.arguments_parsing_error,
+                additional_message=f'"{word}" не подходит как аргумент для команды.')
+        if counts.final_length == 1 and counts.speed == 1:
+            raise ProcessingException(
+                exception_type=ProcessingException.ProcessingExceptionType.arguments_parsing_error,
+                additional_message=f'Параметры "x*" и "l*" не могут использоваться вместе, используйте что-то одно.')
+
+    return result
 
 
 def video_quote(update: Update, context: CallbackContext):
     waiting_text = "Ваш запрос очень кважен для нас, оставайтесь на линии!"
     message = update.message
-    wait_message = message.reply_text(text=waiting_text)
+    wait_message = context.bot.send_message(chat_id=update.effective_chat.id, text=waiting_text,
+                                            reply_to_message_id=update.effective_message.message_id)
 
     sticker = None
     try:
         if (original_message := message.reply_to_message) is not None:
+            arguments = parse_arguments(message.text)
             if (video_note := original_message.video_note) is not None:  # circle video
                 if (file_id := video_note.file_id) is not None:
-                    sticker = file2animated_sticker(file_id, context, preprocess_type=FilePreprocessType.circle)
+                    sticker = file2animated_sticker(file_id, context, preprocess_type=FilePreprocessType.circle,
+                                                    video_arguments=arguments)
             elif (
                     video := original_message.document if original_message.document is not None
                     else original_message.video) is not None:
                 if video.file_size > 10485760:  # 10mb
-                    on_quote_return(wait_message=wait_message, success=False, error=ProcessingErrorType.file_too_large)
-                    return
-                sticker = file2animated_sticker(video.file_id, context, preprocess_type=FilePreprocessType.video_thumb)
+                    raise ProcessingException(exception_type=ProcessingException.ProcessingExceptionType.file_too_large)
+                sticker = file2animated_sticker(video.file_id, context, preprocess_type=FilePreprocessType.video_thumb,
+                                                video_arguments=arguments)
             else:
-                on_quote_return(wait_message=wait_message, success=False, error=ProcessingErrorType.wrong_source_type)
-                return
+                raise ProcessingException(exception_type=ProcessingException.ProcessingExceptionType.wrong_source_type)
+    except ProcessingException as e:
+        edit_exception(wait_message=wait_message, exception=e)
+        return
     except Exception as e:
         print(e)
-        on_quote_return(wait_message=wait_message, success=False)
+        edit_exception(wait_message=wait_message, exception=ProcessingException(
+            exception_type=ProcessingException.ProcessingExceptionType.unexpected))
         return
 
     if sticker is None:
-        on_quote_return(wait_message=wait_message, success=False)
+        edit_exception(wait_message=wait_message, exception=ProcessingException(
+            exception_type=ProcessingException.ProcessingExceptionType.unexpected))
         return
 
     sticker_set_name = f"animated_stickerpack_by_{context.bot.name[1:]}"
@@ -116,7 +150,7 @@ def video_quote(update: Update, context: CallbackContext):
     for sticker in sticker_set.stickers[1:]:
         context.bot.delete_sticker_from_set(sticker.file_id)
 
-    on_quote_return(wait_message=wait_message, success=True)
+    wait_message.delete()
 
 
 def quote(update: Update, context: CallbackContext):
@@ -143,22 +177,25 @@ def quote(update: Update, context: CallbackContext):
                         sticker = file2sticker(file_id, context)
                 else:
                     if video.file_size > 10485760:  # 10mb
-                        on_quote_return(original_message=message, success=False,
-                                        error=ProcessingErrorType.file_too_large)
-                        return
+                        raise ProcessingException(
+                            exception_type=ProcessingException.ProcessingExceptionType.file_too_large)
                     sticker = file2sticker(video.file_id, context, preprocess_type=FilePreprocessType.video_thumb)
             elif (photo := original_message.photo) is not None and len(photo) > 0:
                 if (file_id := photo[-1].file_id) is not None:
                     sticker = file2sticker(file_id, context)
             else:
-                on_quote_return(original_message=message, success=False, error=ProcessingErrorType.wrong_source_type)
-                return
+                raise ProcessingException(exception_type=ProcessingException.ProcessingExceptionType.wrong_source_type)
+    except ProcessingException as e:
+        reply_exception(reply_message=message, exception=e, update=update, context=context)
+        return
     except Exception as e:
         print(e)
-        on_quote_return(original_message=message, success=False)
+        reply_exception(reply_message=message, exception=ProcessingException(
+            exception_type=ProcessingException.ProcessingExceptionType.unexpected), context=context, update=update)
         return
     if sticker is None:
-        on_quote_return(original_message=message, success=False)
+        reply_exception(reply_message=message, exception=ProcessingException(
+            exception_type=ProcessingException.ProcessingExceptionType.unexpected), context=context, update=update)
         return
 
     sticker_set_name = f"image_stickerpack_by_{context.bot.name[1:]}"

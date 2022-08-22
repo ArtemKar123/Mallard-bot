@@ -1,6 +1,5 @@
 import enum
 import subprocess
-
 from telegram.ext import CallbackContext
 import cv2
 import numpy as np
@@ -9,6 +8,8 @@ import tempfile
 import time
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
 import random
+from dataclasses import dataclass
+from exceptions import ProcessingException
 
 
 class FilePreprocessType(enum.Enum):
@@ -19,18 +20,63 @@ class FilePreprocessType(enum.Enum):
     default = 4
 
 
+@dataclass
+class VideoQuoteArguments:
+    """
+    1. Crop video from starting_point to end_point
+    2. Change video speed to `speed`
+    """
+    starting_point: int = None  # s
+    end_point: int = None  # e
+    speed: float = None  # x
+    final_length: float = None  # l
+
+
 def file2animated_sticker(file_id: str, context: CallbackContext,
-                          preprocess_type: FilePreprocessType = FilePreprocessType.default) -> BytesIO:
+                          preprocess_type: FilePreprocessType = FilePreprocessType.default,
+                          video_arguments: VideoQuoteArguments = VideoQuoteArguments()) -> BytesIO:
     file_bytes = context.bot.getFile(file_id).download_as_bytearray()
     sticker = None
     with tempfile.NamedTemporaryFile(suffix='.mp4') as temp:
         temp.write(file_bytes)
         t = time.time()
         cap = cv2.VideoCapture(temp.name)
-        print('OPEN TIME', time.time() - t)
+
+        # count the number of frames
+        frames = cap.get(cv2.CAP_PROP_FRAME_COUNT)
+        fps = cap.get(cv2.CAP_PROP_FPS)
+
+        # calculate duration of the video
+        video_length_seconds = round(frames / fps)
+
+        if video_arguments.starting_point is None:
+            video_arguments.starting_point = 0
+        elif video_arguments.starting_point > video_length_seconds:
+            raise ProcessingException(
+                exception_type=ProcessingException.ProcessingExceptionType.arguments_parsing_error,
+                additional_message='Секунда начала должна быть меньше чем длина видео.')
+        if video_arguments.speed is None:
+            video_arguments.speed = 1
+        if video_arguments.final_length is None:
+            video_arguments.final_length = 2.9
+
+        if video_arguments.end_point is not None and video_arguments.end_point <= video_arguments.starting_point:
+            raise ProcessingException(
+                exception_type=ProcessingException.ProcessingExceptionType.arguments_parsing_error,
+                additional_message='Секунда завершения должна быть строго больше секунды начала.')
+
+        video_arguments.starting_point = round(
+            video_arguments.starting_point * float(1 / video_arguments.speed))
+
+        if video_arguments.end_point is not None:
+            video_arguments.end_point = max(video_arguments.starting_point + float(1 / video_arguments.speed),
+                                            round(video_arguments.end_point * float(1 / video_arguments.speed)))
+            video_arguments.final_length = (video_arguments.end_point - video_arguments.starting_point)
+        print(video_arguments.final_length)
+        video_arguments.final_length = max(0.1, min(video_arguments.final_length, 2.9))
+        fps = int(fps * video_arguments.speed)
         w = int(cap.get(3))
         h = int(cap.get(4))
-        fps = int(cap.get(5))
         if w >= h:
             new_h = int(h * (512 / w))
             new_w = 512
@@ -40,6 +86,9 @@ def file2animated_sticker(file_id: str, context: CallbackContext,
         cap.release()
         print(new_w, new_h)
         with tempfile.NamedTemporaryFile(suffix='.webm') as out_temp:
+            starting_second = str(video_arguments.starting_point)
+            if len(starting_second) == 1:
+                starting_second = '0' + starting_second
             if preprocess_type == FilePreprocessType.circle:
                 with tempfile.NamedTemporaryFile(suffix='.png') as mask_temp:
                     mask = np.full((512, 512, 4), (0, 0, 0, 0)).astype(np.uint8)
@@ -49,17 +98,24 @@ def file2animated_sticker(file_id: str, context: CallbackContext,
                     mask[frame_circle == 255] = blurred[frame_circle == 255]
                     mask = cv2.resize(mask, (w, h))
                     cv2.imwrite(mask_temp.name, mask)
+
                     query = f'ffmpeg -nostats \
                             -loglevel error \
                             -y \
                             -i {temp.name} \
                             -loop 1 \
-                            -i {mask_temp.name} -filter_complex "[1:v]alphaextract[alf];[0:v][alf]alphamerge"\
+                            -i {mask_temp.name} -filter_complex "[1:v]alphaextract[alf];[0:v][alf]alphamerge[res];[res]setpts={float(1 / video_arguments.speed):.2f}*PTS"\
                             -c:v libvpx-vp9 -auto-alt-ref 0 \
                             -preset ultrafast \
-                            -r {fps} \
+                            -ss 00:00:{starting_second} '
+                    if video_arguments.end_point is not None:
+                        ending_point = str(video_arguments.end_point)
+                        if len(ending_point) == 1:
+                            ending_point = '0' + ending_point
+                        query += f'-to 00:00:{ending_point} '
+                    query += f'-r {fps} \
                             -s {new_w}x{new_h} \
-                            -t 2.8 \
+                            -t {video_arguments.final_length} \
                             -an \
                             {out_temp.name}'
                     print(query)
@@ -67,10 +123,28 @@ def file2animated_sticker(file_id: str, context: CallbackContext,
                                     ,
                                     shell=True)
             else:
+                print('Starting from', starting_second)
+                query = f'ffmpeg -nostats \
+                    -loglevel error \
+                    -y \
+                    -i {temp.name} \
+                    -c:v libvpx-vp9 \
+                    -pix_fmt yuva420p \
+                    -preset ultrafast \
+                    -ss 00:00:{starting_second} '
+                if video_arguments.end_point is not None:
+                    ending_point = str(video_arguments.end_point)
+                    if len(ending_point) == 1:
+                        ending_point = '0' + ending_point
+                    query += f'-to 00:00:{ending_point} '
+                query += f'-r {fps} \
+                    -filter:v "setpts={float(1 / video_arguments.speed):.2f}*PTS" \
+                    -s {new_w}x{new_h} \
+                    -t {video_arguments.final_length} {out_temp.name}'
+                print(query)
                 subprocess.call(
-                    f'ffmpeg -nostats -loglevel error -y -i {temp.name} -c:v libvpx-vp9 -pix_fmt yuva420p -preset ultrafast -r {fps} -s {new_w}x{new_h} -t 2.8 {out_temp.name}',
+                    query,
                     shell=True)
-
             sticker = BytesIO(out_temp.read())
             sticker.seek(0)
     return sticker
@@ -114,6 +188,7 @@ def file2sticker(file_id: str, context: CallbackContext,
     sticker = BytesIO(buffer)
     sticker.seek(0)
     return sticker
+
 
 # FIXME: simple yet buggy, would be nice to make it any smarter.
 def quote2sticker(quote, author, fg='black', font_file=None, font_size=None, width=512,
