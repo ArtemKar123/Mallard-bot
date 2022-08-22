@@ -74,7 +74,8 @@ def file2animated_sticker(file_id: str, context: CallbackContext,
             video_arguments.final_length = (video_arguments.end_point - video_arguments.starting_point)
         print(video_arguments.final_length)
         video_arguments.final_length = max(0.1, min(video_arguments.final_length, 2.9))
-        fps = int(fps * video_arguments.speed)
+        if video_arguments.speed < 1:
+            fps = int(fps * video_arguments.speed)
         w = int(cap.get(3))
         h = int(cap.get(4))
         if w >= h:
