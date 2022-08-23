@@ -10,6 +10,7 @@ from PIL import Image, ImageDraw, ImageFont, ImageFilter
 import random
 from dataclasses import dataclass
 from exceptions import ProcessingException
+from content.bubbles.bubbles import BUBBLE_NAMES
 
 
 class FilePreprocessType(enum.Enum):
@@ -31,6 +32,12 @@ class VideoQuoteArguments:
     speed: float = None  # x
     final_length: float = None  # l
     reverse: bool = None  # r
+    speech_bubble: int = None
+
+
+@dataclass
+class PhotoQuoteArguments:
+    speech_bubble: int = None
 
 
 def file2animated_sticker(file_id: str, context: CallbackContext,
@@ -107,7 +114,12 @@ def file2animated_sticker(file_id: str, context: CallbackContext,
             if len(starting_second) == 1:
                 starting_second = '0' + starting_second
             if preprocess_type == FilePreprocessType.circle:
-                with tempfile.NamedTemporaryFile(suffix='.png') as mask_temp:
+                with tempfile.NamedTemporaryFile(suffix='.png') as mask_temp, tempfile.NamedTemporaryFile(
+                        suffix='.png') as speech_bubble_temp:
+                    if video_arguments.speech_bubble is not None:
+                        bubble = cv2.imread(BUBBLE_NAMES[video_arguments.speech_bubble], cv2.IMREAD_UNCHANGED)
+                        bubble = cv2.resize(bubble, (w, h))
+                        cv2.imwrite(speech_bubble_temp.name, bubble)
                     mask = np.full((512, 512, 4), (0, 0, 0, 0)).astype(np.uint8)
                     mask = cv2.circle(mask, (255, 255), 250, (255, 255, 255, 255), thickness=-1)
                     frame_circle = np.load('frame.dat', allow_pickle=True)
@@ -115,13 +127,18 @@ def file2animated_sticker(file_id: str, context: CallbackContext,
                     mask[frame_circle == 255] = blurred[frame_circle == 255]
                     mask = cv2.resize(mask, (w, h))
                     cv2.imwrite(mask_temp.name, mask)
-                    filter_complex = f'-filter_complex "[1:v]alphaextract[alf];[0:v][alf]alphamerge[res];{"[res]reverse[res];" if video_arguments.reverse else ""}[res]setpts={float(1 / video_arguments.speed):.2f}*PTS"'
+                    filter_complex = f'-filter_complex "[1:v]alphaextract[alf];' \
+                                     f'[0:v][alf]alphamerge[res];' \
+                                     f'{"[res][2:v]overlay[res];" if video_arguments.speech_bubble is not None else ""}' \
+                                     f'{"[res]reverse[res];" if video_arguments.reverse else ""}' \
+                                     f'[res]setpts={float(1 / video_arguments.speed):.2f}*PTS"'
                     query = f'ffmpeg -nostats \
                             -loglevel error \
                             -y \
                             -i {temp.name} \
                             -loop 1 \
                             -i {mask_temp.name} \
+                            {"-i " + speech_bubble_temp.name if video_arguments.speech_bubble is not None else ""} \
                             {filter_complex} \
                             -c:v libvpx-vp9 -auto-alt-ref 0 \
                             -preset ultrafast \
@@ -137,42 +154,52 @@ def file2animated_sticker(file_id: str, context: CallbackContext,
                             -an \
                             {out_temp.name}'
                     print(query)
-                    subprocess.call(query
-                                    ,
-                                    shell=True)
+                    subprocess.call(query, shell=True, timeout=75)
             else:
-                v_filter = f"setpts={float(1 / video_arguments.speed):.2f}*PTS"
-                if video_arguments.reverse:
-                    v_filter += ',reverse '
-                print('Starting from', starting_second)
-                query = f'ffmpeg -nostats \
-                    -loglevel error \
-                    -y \
-                    -i {temp.name} \
-                    -c:v libvpx-vp9 \
-                    -pix_fmt yuva420p \
-                    -preset ultrafast \
-                    -ss 00:00:{starting_second} '
-                if video_arguments.end_point is not None:
-                    ending_point = str(video_arguments.end_point)
-                    if len(ending_point) == 1:
-                        ending_point = '0' + ending_point
-                    query += f'-to 00:00:{ending_point} '
-                query += f'-r {fps} \
-                    -filter:v {v_filter} \
-                    -s {new_w}x{new_h} \
-                    -t {video_arguments.final_length} {out_temp.name}'
-                print(query)
-                subprocess.call(
-                    query,
-                    shell=True)
+                with tempfile.NamedTemporaryFile(suffix='.png') as speech_bubble_temp:
+                    if video_arguments.speech_bubble is not None:
+                        bubble = cv2.imread(BUBBLE_NAMES[video_arguments.speech_bubble], cv2.IMREAD_UNCHANGED)
+                        bubble = cv2.resize(bubble, (w, h))
+                        cv2.imwrite(speech_bubble_temp.name, bubble)
+
+                    print('Starting from', starting_second)
+                    filter_complex = f'-filter_complex "[0:v]setpts={float(1 / video_arguments.speed):.2f}*PTS[res];' \
+                                     f'{"[res][1:v]overlay[res];" if video_arguments.speech_bubble is not None else ""}' \
+                                     f'{"[res]reverse[res];" if video_arguments.reverse else ""}' \
+                                     '"'
+                    if filter_complex[-7:] == '[res];"':
+                        filter_complex = filter_complex[:-7] + '"'
+                    query = f'ffmpeg -nostats \
+                                                -loglevel error \
+                                                -y \
+                                                -i {temp.name} \
+                                                -loop 1 \
+                                                {"-i " + speech_bubble_temp.name if video_arguments.speech_bubble is not None else ""} \
+                                                {filter_complex} \
+                                                -c:v libvpx-vp9 -auto-alt-ref 0 \
+                                                -preset ultrafast \
+                                                -ss 00:00:{starting_second} '
+                    if video_arguments.end_point is not None:
+                        ending_point = str(video_arguments.end_point)
+                        if len(ending_point) == 1:
+                            ending_point = '0' + ending_point
+                        query += f'-to 00:00:{ending_point} '
+                    query += f'-r {fps} \
+                                                -s {new_w}x{new_h} \
+                                                -t {video_arguments.final_length} \
+                                                -an \
+                                                {out_temp.name}'
+                    print(query)
+                    subprocess.call(query, shell=True, timeout=75)
             sticker = BytesIO(out_temp.read())
             sticker.seek(0)
     return sticker
 
 
 def file2sticker(file_id: str, context: CallbackContext,
-                 preprocess_type: FilePreprocessType = FilePreprocessType.default) -> BytesIO:
+                 preprocess_type: FilePreprocessType = FilePreprocessType.default,
+                 photo_arguments: PhotoQuoteArguments = PhotoQuoteArguments()) -> BytesIO:
+    print(photo_arguments.speech_bubble)
     file_bytes = context.bot.getFile(file_id).download_as_bytearray()
     image = None
     if preprocess_type == FilePreprocessType.video_thumb:
@@ -204,6 +231,11 @@ def file2sticker(file_id: str, context: CallbackContext,
             new_h = 512
         image = cv2.resize(image, (new_w, new_h))
         image = cv2.cvtColor(image, cv2.COLOR_RGB2RGBA)
+
+    if photo_arguments.speech_bubble is not None:
+        bubble = cv2.imread(BUBBLE_NAMES[photo_arguments.speech_bubble], cv2.IMREAD_UNCHANGED)
+        bubble = cv2.resize(bubble, image.shape[:2][::-1])
+        image = cv2.addWeighted(image, 1, bubble, 1, 0)
 
     is_success, buffer = cv2.imencode(".png", image)
     sticker = BytesIO(buffer)
