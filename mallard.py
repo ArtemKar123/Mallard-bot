@@ -7,7 +7,7 @@ class Mallard:
     Replies to stuff.
     """
 
-    def __init__(self, random_answer_rate=1000):
+    def __init__(self, random_answer_rate=200):
         self.RANDOM_ANSWER_RATE = random_answer_rate
         pass
 
@@ -45,7 +45,7 @@ class Mallard:
         :return:
         """
         if random.randint(0, self.RANDOM_ANSWER_RATE) == 0:
-            if random.randint(0, 1) == 0:
+            if random.randint(0, 2) == 0:
                 random.shuffle(RANDOM_RESPONCES_DICT)
                 return RANDOM_RESPONCES_DICT[random.randint(0, len(RANDOM_RESPONCES_DICT) - 1)], False
             else:
