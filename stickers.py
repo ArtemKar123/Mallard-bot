@@ -40,6 +40,55 @@ class PhotoQuoteArguments:
     speech_bubble: int = None
 
 
+def video2emoji(file_id: str, context: CallbackContext):
+    print('video2emoji')
+    file_bytes = context.bot.getFile(file_id).download_as_bytearray()
+    emoji = None
+
+    with tempfile.NamedTemporaryFile(suffix='.mp4') as temp:
+        temp.write(file_bytes)
+
+        cap = cv2.VideoCapture(temp.name)
+
+        # count the number of frames
+        fps = cap.get(cv2.CAP_PROP_FPS)
+
+        new_w = new_h = 100
+        with tempfile.NamedTemporaryFile(suffix='.webm') as out_temp:
+            query = f'ffmpeg -nostats \
+                                -loglevel error \
+                                -y \
+                                -i {temp.name} \
+                                -loop 1 \
+                                -c:v libvpx-vp9 -auto-alt-ref 0 \
+                                -preset ultrafast \
+                                -r {fps} \
+                                -s {new_w}x{new_h}\
+                                -an \
+                                {out_temp.name}'
+            print(query)
+            subprocess.call(query, shell=True, timeout=75)
+
+            emoji = BytesIO(out_temp.read())
+            emoji.seek(0)
+    return emoji
+
+
+def image2emoji(file_id: str, context: CallbackContext):
+    file_bytes = context.bot.getFile(file_id).download_as_bytearray()
+    image = None
+
+    inp = np.asarray(bytearray(file_bytes), dtype=np.uint8)
+    image = cv2.imdecode(inp, cv2.IMREAD_COLOR)
+
+    image = cv2.resize(image, (100, 100))
+
+    is_success, buffer = cv2.imencode(".png", image)
+    sticker = BytesIO(buffer)
+    sticker.seek(0)
+    return sticker
+
+
 def file2animated_sticker(file_id: str, context: CallbackContext,
                           preprocess_type: FilePreprocessType = FilePreprocessType.default,
                           video_arguments: VideoQuoteArguments = VideoQuoteArguments()) -> BytesIO:

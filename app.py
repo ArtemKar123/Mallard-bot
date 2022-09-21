@@ -6,18 +6,31 @@ from telegram.ext import Updater
 from telegram.ext import MessageHandler, Filters
 import telegram
 from mallard import Mallard
-from stickers import file2sticker, file2animated_sticker, quote2sticker, FilePreprocessType
+from stickers import file2sticker, file2animated_sticker, quote2sticker, video2emoji, image2emoji, FilePreprocessType
 from content.emoji_dict import EMOJI_LIST
 import random
 import re
 from stickers import VideoQuoteArguments, PhotoQuoteArguments
 from exceptions import ProcessingException
 from content.bubbles.bubbles import BUBBLES_COUNT
+from uuid import uuid4
 
 mallard = Mallard(random_answer_rate=150)
 
 token = os.environ.get('TG_API_KEY')
 admin_id = os.environ.get('TG_ADMIN_ID')
+
+
+def sticker2emoji_echo(update: Update, context: CallbackContext):
+    if update.message.sticker.is_animated or update.message.chat.type != 'private':
+        return
+
+    if update.message.sticker.is_video:
+        emoji = video2emoji(update.message.sticker.file_id, context)
+        update.message.reply_document(document=emoji, filename=str(uuid4()) + '.webm')
+    else:
+        emoji = image2emoji(update.message.sticker.file_id, context)
+        update.message.reply_photo(photo=emoji)
 
 
 def echo(update: Update, context: CallbackContext):
@@ -33,8 +46,10 @@ def echo(update: Update, context: CallbackContext):
             context.bot.send_message(chat_id=update.effective_chat.id, text=reply,
                                      reply_to_message_id=update.effective_message.message_id)
 
+
 def on_sticker_sent(update: Update, context: CallbackContext):
     print(update.message.sticker.file_id, ', ')
+
 
 def command(update: Update, context: CallbackContext):
     # print(update)
@@ -288,10 +303,13 @@ def main():
 
     handler = MessageHandler((Filters.text | Filters.caption) & (~Filters.command), echo, run_async=True)
     command_handler = MessageHandler(Filters.command, command, run_async=True)
+
+    sticker2emoji_handler = MessageHandler(Filters.sticker, sticker2emoji_echo, run_async=True)
     # sh = MessageHandler(Filters.sticker, on_sticker_sent)
     # dispatcher.add_handler(sh)
     dispatcher.add_handler(handler)
     dispatcher.add_handler(command_handler)
+    dispatcher.add_handler(sticker2emoji_handler)
 
     print('STARTED')
     updater.start_polling(drop_pending_updates=True)
