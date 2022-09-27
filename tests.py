@@ -25,10 +25,13 @@ def test_basic_answers():
 
 def test_random_answers():
     cnt = 0
+    distinct = set()
     for i in range(5000):
         resp, is_sticker = mallard.process("aboba")
         if resp is not None:
             assert (is_sticker is not True and resp in RANDOM_RESPONCES_DICT) or (
                         is_sticker and resp in RANDOM_STICKERS)
             cnt += 1
+            distinct.insert(resp)
     assert 0 < cnt < 50
+    assert len(distinct) > cnt / 2
