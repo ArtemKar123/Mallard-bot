@@ -1,5 +1,5 @@
 import random
-from content.dictionaries import BASIC_REPLIES_DICT, RANDOM_RESPONCES_DICT, RANDOM_STICKERS
+from content.dictionaries import BASIC_REPLIES_DICT, RANDOM_RESPONCES_DICT, RANDOM_STICKERS, EXCEPTIONS_DICT
 
 
 class Mallard:
@@ -33,6 +33,12 @@ class Mallard:
         for keyword in basic_dict.keys():
             if (upper := keyword.upper()) in saying and len(basic_dict[keyword]) > 0:
                 found_keywords.append(upper)
+
+        for i in range(len(found_keywords)):
+            for exception in EXCEPTIONS_DICT[found_keywords[i]]:
+                if exception.upper() in saying:
+                    found_keywords.remove(found_keywords[i])
+                    break
 
         if (l := len(found_keywords)) > 0:
             chosen_keyword = found_keywords[random.randint(0, l - 1)]
