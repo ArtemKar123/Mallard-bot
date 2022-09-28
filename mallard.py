@@ -35,6 +35,8 @@ class Mallard:
                 found_keywords.append(upper)
 
         for i in range(len(found_keywords)):
+            if found_keywords[i] not in EXCEPTIONS_DICT:
+                continue
             for exception in EXCEPTIONS_DICT[found_keywords[i]]:
                 if exception.upper() in saying:
                     found_keywords.remove(found_keywords[i])
