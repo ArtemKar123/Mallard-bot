@@ -1,3 +1,4 @@
 python_telegram_bot==13.11
 numpy==1.22.0
 Pillow==9.2.0
+opencv-python
