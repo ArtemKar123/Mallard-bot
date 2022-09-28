@@ -50,11 +50,10 @@ class Mallard:
         says random stuff
         :return:
         """
-        if random.randint(0, self.RANDOM_ANSWER_RATE) == 0:
-            if random.randint(0, 2) == 0:
-                random.shuffle(RANDOM_RESPONCES_DICT)
-                return RANDOM_RESPONCES_DICT[random.randint(0, len(RANDOM_RESPONCES_DICT) - 1)], False
-            else:
-                random.shuffle(RANDOM_STICKERS)
-                return RANDOM_STICKERS[random.randint(0, len(RANDOM_STICKERS) - 1)], True
+        type = random.choices(population=[None, "Sticker", "Responce"],
+                              weights=[self.RANDOM_ANSWER_RATE, 0.5, 0.5])
+        if type == "Responce":
+            return random.choice(RANDOM_RESPONCES_DICT), False
+        if type == "Sticker":
+            return random.choice(RANDOM_STICKERS), True
         return None, False
