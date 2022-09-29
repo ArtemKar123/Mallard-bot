@@ -1,4 +1,3 @@
-import enum
 import os
 from telegram import Update
 from telegram.ext import CallbackContext
@@ -14,6 +13,7 @@ from stickers import VideoQuoteArguments, PhotoQuoteArguments
 from exceptions import ProcessingException
 from content.bubbles.bubbles import BUBBLES_COUNT
 from uuid import uuid4
+from responses import *
 
 mallard = Mallard(random_answer_rate=150)
 
@@ -22,14 +22,17 @@ admin_id = os.environ.get('TG_ADMIN_ID')
 
 
 def sticker2emoji_echo(update: Update, context: CallbackContext):
-    if update.message.sticker.is_animated or update.message.chat.type != 'private':
+    if update.message.reply_to_message is None or update.message.reply_to_message.sticker is None \
+            or update.message.reply_to_message.sticker.is_animated or update.message.chat.type != 'private':
         return
 
-    if update.message.sticker.is_video:
-        emoji = video2emoji(update.message.sticker.file_id, context)
+    sticker = update.message.reply_to_message.sticker
+    print(sticker)
+    if sticker.is_video:
+        emoji = video2emoji(sticker.file_id, context)
         update.message.reply_document(document=emoji, filename=str(uuid4()) + '.webm')
     else:
-        emoji = image2emoji(update.message.sticker.file_id, context)
+        emoji = image2emoji(sticker.file_id, context)
         update.message.reply_photo(photo=emoji)
 
 
@@ -37,18 +40,14 @@ def echo(update: Update, context: CallbackContext):
     text = update.message.text if update.message.text is not None else update.message.caption
     if text is None:
         return
-    reply, reply_is_sticker = mallard.process(text)
-    if reply is not None:
-        if reply_is_sticker:
+    reply, reply_type = mallard.process(text)
+    if reply is not None and reply_type is not None:
+        if reply_type == ResponseType.STICKER:
             context.bot.send_sticker(chat_id=update.effective_chat.id, sticker=reply,
                                      reply_to_message_id=update.effective_message.message_id)
-        else:
+        elif reply_type == ResponseType.TEXT:
             context.bot.send_message(chat_id=update.effective_chat.id, text=reply,
                                      reply_to_message_id=update.effective_message.message_id)
-
-
-def on_sticker_sent(update: Update, context: CallbackContext):
-    print(update.message.sticker.file_id, ', ')
 
 
 def command(update: Update, context: CallbackContext):
@@ -59,6 +58,10 @@ def command(update: Update, context: CallbackContext):
         video_quote(update, context)
     elif update.message.text == f'/help{context.bot.name}':
         help(update, context)
+    elif update.message.text == '/id':
+        get_sticker_id(update, context)
+    elif update.message.text == '/emoji':
+        sticker2emoji_echo(update, context)
 
 
 def help(update: Update, context: CallbackContext):
@@ -297,6 +300,16 @@ def quote(update: Update, context: CallbackContext):
         return
 
 
+def get_sticker_id(update: Update, context: CallbackContext):
+    if update.message.reply_to_message.sticker is None:
+        context.bot.send_message(chat_id=update.effective_chat.id,
+                                 text="Команда должна быть отправлена в ответ на стикер",
+                                 reply_to_message_id=update.effective_message.message_id)
+    else:
+        context.bot.send_message(chat_id=update.effective_chat.id, text=update.message.reply_to_message.sticker.file_id,
+                                 reply_to_message_id=update.effective_message.message_id)
+
+
 def main():
     updater = Updater(token=token, use_context=True, workers=6)
     dispatcher = updater.dispatcher
@@ -304,12 +317,8 @@ def main():
     handler = MessageHandler((Filters.text | Filters.caption) & (~Filters.command), echo, run_async=True)
     command_handler = MessageHandler(Filters.command, command, run_async=True)
 
-    sticker2emoji_handler = MessageHandler(Filters.sticker, sticker2emoji_echo, run_async=True)
-    # sh = MessageHandler(Filters.sticker, on_sticker_sent)
-    # dispatcher.add_handler(sh)
     dispatcher.add_handler(handler)
     dispatcher.add_handler(command_handler)
-    dispatcher.add_handler(sticker2emoji_handler)
 
     print('STARTED')
     updater.start_polling(drop_pending_updates=True)
