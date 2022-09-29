@@ -60,7 +60,7 @@ def video2emoji(file_id: str, context: CallbackContext):
                                 -y \
                                 -i {temp.name} \
                                 -loop 1 \
-                                -c:v libvpx-vp9 -auto-alt-ref 0 \
+                                -c:v libvpx-vp9 \
                                 -preset ultrafast \
                                 -r {fps} \
                                 -s {new_w}x{new_h}\
@@ -90,6 +90,7 @@ def image2emoji(file_id: str, context: CallbackContext):
     return sticker
 
 
+# FIXME: auto-alt-ref makes ffmpeg read video without alpha channel which should be fixed
 def file2animated_sticker(file_id: str, context: CallbackContext,
                           preprocess_type: FilePreprocessType = FilePreprocessType.default,
                           video_arguments: VideoQuoteArguments = VideoQuoteArguments()) -> BytesIO:

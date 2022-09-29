@@ -321,6 +321,7 @@ def main():
     dispatcher.add_handler(command_handler)
 
     print('STARTED')
+    updater.bot.sendMessage(chat_id=admin_id, text='Я родился!')
     updater.start_polling(drop_pending_updates=True)
 
 
