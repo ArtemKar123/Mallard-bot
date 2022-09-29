@@ -79,7 +79,8 @@ def image2emoji(file_id: str, context: CallbackContext):
     image = None
 
     inp = np.asarray(bytearray(file_bytes), dtype=np.uint8)
-    image = cv2.imdecode(inp, cv2.IMREAD_COLOR)
+    image = cv2.imdecode(inp, cv2.IMREAD_UNCHANGED)
+    image = cv2.cvtColor(image, cv2.COLOR_RGB2RGBA)
 
     image = cv2.resize(image, (100, 100))
 
@@ -261,7 +262,7 @@ def file2sticker(file_id: str, context: CallbackContext,
             cap.release()
     else:
         inp = np.asarray(bytearray(file_bytes), dtype=np.uint8)
-        image = cv2.imdecode(inp, cv2.IMREAD_COLOR)
+        image = cv2.imdecode(inp, cv2.IMREAD_UNCHANGED)
 
     if image is None:
         return BytesIO()
