@@ -1,11 +1,22 @@
-BASIC_REPLIES_DICT = {
-    'КВА': ['ква', 'ква!', 'ква-ква', 'ква)', 'ква\U0001F60C'],
-    'КАР': ['кар', 'кар!', 'кар-кар', 'кар)', 'кар\U0001F60C'],
-    'КРЯ': ['кря', 'кря!', 'кря-кря', 'кря)', 'кря\U0001F60C'],
-    'ХРЮ': ['хрю', 'хрюк', 'хрю-хрю', 'хряк', 'хрю\U0001F60C'],
-    'МИУ': ['ква\U0001F60C', 'кря\U0001F60C', 'миy\U0001F60C'],
-    'ЧМОК': ['чмок', 'ты мне нравишься!!!', 'чмок\U0001F60A', 'чмок\U0001F970', '\U0001F618'],
-}
+import typing
+from responses import *
+
+BASIC_REPLIES_DICT: typing.Dict[str, typing.List[Response]]
+RANDOM_RESPONCES_LIST: typing.List[Response]
+
+
+def generate_dictionary(target: typing.Dict, dictionary: typing.Dict, response_type: ResponseType):
+    for key in dictionary.keys():
+        if key not in target:
+            target[key] = []
+        for entry in dictionary[key]:
+            target[key].append(Response(entry, response_type))
+
+
+def generate_list(target: typing.List, dictionary: typing.List, response_type: ResponseType):
+    for entry in dictionary:
+        target.append(Response(entry, response_type))
+
 
 EXCEPTIONS_DICT = {
     'КВА': [],
@@ -15,7 +26,32 @@ EXCEPTIONS_DICT = {
     'МИУ': [],
 }
 
-RANDOM_RESPONCES_DICT = [
+basic_text_replies = {
+    'КВА': ['ква', 'ква!', 'ква-ква', 'ква)', 'ква\U0001F60C'],
+    'КАР': ['кар', 'кар!', 'кар-кар', 'кар)', 'кар\U0001F60C'],
+    'КРЯ': ['кря', 'кря!', 'кря-кря', 'кря)', 'кря\U0001F60C'],
+    'ХРЮ': ['хрю', 'хрюк', 'хрю-хрю', 'хряк', 'хрю\U0001F60C'],
+    'МИУ': ['ква\U0001F60C', 'кря\U0001F60C', 'миy\U0001F60C'],
+    'ЧМОК': ['чмок', 'ты мне нравишься!!!', 'чмок\U0001F970'],
+}
+
+basic_sticker_replies = {
+    'КВА': ['CAACAgIAAxkBAAIESWM1aZ9RdG-lmZp1s6G43v0AAWkz9wACaxEAAoQoUUjd6i8SNVbr1SoE',  # Frog with wine
+            'CAACAgQAAxkBAAIEiWM1dv6UlBwAAakXetRKlhnhymykfwACawAD8YWLBHZImbEd8HQ_KgQ',  # Kermit hearts
+            'CAACAgQAAxkBAAIEi2M1d3bG7EYGTY7qYCzWRQI-0xEqAAIiAQACqCEhBsMhKQ89A7XmKgQ',  # Dancing Apu
+            ],
+    'КРЯ': ['CAACAgIAAxkBAAIER2M1aUsxYHmoj3SHqYn-X5mvCF98AAJqHQACYzEZSHXmSO3qgEwmKgQ',  # Spinning mallard
+            ],
+    'МИУ': ['CAACAgIAAxkBAAIEj2M1eDUwbTfBHMxBut_FsUFTscpRAALtHgACP7shSDUQ-4C6RGYZKgQ',  # Cat in milk
+            'CAACAgIAAxkBAAIElWM1eNbip3RITb16zOxw-wJDobgXAAIiEAACV2HJS1e96adku96ZKgQ',  # Cat jumps to you
+            'CAACAgIAAxkBAAIEl2M1eN3VUarEYilDZ81I1IDILRcqAAI6FAACh9vJS7eEtmgl-WtUKgQ',  # Cat runs to you
+            ],
+    'ЧМОК': ['CAACAgIAAxkBAAIES2M1cN1wtBwRBVJUrc41Q8IqUpdRAALbIQACh2hISahd3FVgrVqvKgQ',  # Kissing sticker
+             'CAACAgIAAxkBAAIEk2M1eL_ZB1rJK_YU3kPSepBCvIjPAAKfFQACXVnIS0QNrXBbo2y5KgQ',  # Cat kisses you
+             ],
+}
+
+random_responses_text_list = [
     # 'выключи компьютер', 'выйди на улицу', 'потрогай траву', 'прикоснись до женщины', 'база', 'кринж',
     'очень умный',
     'этот человек прав во всём', 'у тебя красивые глаза', 'ты милашка', 'ты отправляешься в Бразилию', 'напиши в лс',
@@ -27,7 +63,7 @@ RANDOM_RESPONCES_DICT = [
 
 # Don't care about readability lol.
 # Use @idstickerbot to get sticker id.
-RANDOM_STICKERS = [
+random_responses_sticker_list = [
     'CAACAgIAAxkBAAEFBu9ipzuFG-20sV5OsUY4_hi5rJ18gAAC6RMAAuPsyUmr2ECISdqixiQE',
     'CAACAgIAAxkBAAEFBvNipzxf-63InNz8z0z_008NtJfLnAACbRgAAidlUUsdYl5S0stX3CQE',
     'CAACAgIAAxkBAAEFBvFipzxcQfLts3PjuWFbILGHmb_C0gAC0hYAAsFiEUnTxi3655QiryQE',
@@ -49,3 +85,17 @@ RANDOM_STICKERS = [
     'CAACAgIAAxkBAAID8WMH4eBkZrSXradn0MbZOhplzO6JAAJVHwACp3NASCCGtxiyz6VgKQQ',
 
 ]
+
+BASIC_REPLIES_DICT = {}
+generate_dictionary(target=BASIC_REPLIES_DICT, dictionary=basic_text_replies, response_type=ResponseType.TEXT)
+generate_dictionary(target=BASIC_REPLIES_DICT, dictionary=basic_sticker_replies, response_type=ResponseType.STICKER)
+
+RANDOM_RESPONCES_LIST = []
+generate_list(target=RANDOM_RESPONCES_LIST, dictionary=random_responses_text_list,
+              response_type=ResponseType.TEXT)
+generate_list(target=RANDOM_RESPONCES_LIST, dictionary=random_responses_sticker_list,
+              response_type=ResponseType.STICKER)
+
+if __name__ == '__main__':
+    print(len(BASIC_REPLIES_DICT))
+    print(len(RANDOM_RESPONCES_LIST))

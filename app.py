@@ -1,4 +1,3 @@
-import enum
 import os
 from telegram import Update
 from telegram.ext import CallbackContext
@@ -14,6 +13,7 @@ from stickers import VideoQuoteArguments, PhotoQuoteArguments
 from exceptions import ProcessingException
 from content.bubbles.bubbles import BUBBLES_COUNT
 from uuid import uuid4
+from responses import *
 
 mallard = Mallard(random_answer_rate=150)
 
@@ -22,33 +22,36 @@ admin_id = os.environ.get('TG_ADMIN_ID')
 
 
 def sticker2emoji_echo(update: Update, context: CallbackContext):
-    if update.message.sticker.is_animated or update.message.chat.type != 'private':
+    if update.message.reply_to_message is None or update.message.reply_to_message.sticker is None \
+            or update.message.reply_to_message.sticker.is_animated or update.message.chat.type != 'private':
         return
 
-    if update.message.sticker.is_video:
-        emoji = video2emoji(update.message.sticker.file_id, context)
+    sticker = update.message.reply_to_message.sticker
+    print(sticker)
+    if sticker.is_video:
+        arguments = parse_video_arguments(update.message.text)
+        emoji = video2emoji(sticker.file_id, context)
         update.message.reply_document(document=emoji, filename=str(uuid4()) + '.webm')
-    else:
-        emoji = image2emoji(update.message.sticker.file_id, context)
-        update.message.reply_photo(photo=emoji)
+
+    fid = sticker.file_id
+    if sticker.is_video and sticker.thumb is not None and sticker.thumb.file_id is not None:
+        fid = sticker.thumb.file_id
+    emoji = image2emoji(fid, context)
+    update.message.reply_document(document=emoji)
 
 
 def echo(update: Update, context: CallbackContext):
     text = update.message.text if update.message.text is not None else update.message.caption
     if text is None:
         return
-    reply, reply_is_sticker = mallard.process(text)
-    if reply is not None:
-        if reply_is_sticker:
+    reply, reply_type = mallard.process(text)
+    if reply is not None and reply_type is not None:
+        if reply_type == ResponseType.STICKER:
             context.bot.send_sticker(chat_id=update.effective_chat.id, sticker=reply,
                                      reply_to_message_id=update.effective_message.message_id)
-        else:
+        elif reply_type == ResponseType.TEXT:
             context.bot.send_message(chat_id=update.effective_chat.id, text=reply,
                                      reply_to_message_id=update.effective_message.message_id)
-
-
-def on_sticker_sent(update: Update, context: CallbackContext):
-    print(update.message.sticker.file_id, ', ')
 
 
 def command(update: Update, context: CallbackContext):
@@ -59,17 +62,23 @@ def command(update: Update, context: CallbackContext):
         video_quote(update, context)
     elif update.message.text == f'/help{context.bot.name}':
         help(update, context)
+    elif update.message.text == '/id':
+        get_sticker_id(update, context)
+    elif update.message.text == '/emoji':
+        sticker2emoji_echo(update, context)
 
 
 def help(update: Update, context: CallbackContext):
     reply = 'Кряква умеет превращать кружочки, гифки, видео и картинки в стикеры.\n\
 Используйте /qva для анимированных стикеров и /snap для обычных.\n\
+Используйте /emoji в ответ на стикер, чтобы преобразовать его в формат, подходящий для кастомных эмодзи (реакций).\n\
 При использовании /qva вы также можете использовать параметры:\n\
 * s<sec> обрежет видео начиная с sec, sec должно быть целым\n\
 * e<sec> обрежет видео до sec, sec должно быть целым\n\
 * x<speed> изменит скорость видео на speed, speed может иметь вид 123.123\n\
 * r — если указан, видео будет инвертировано\n\
 * b<id> — добавляет пузырёк, 1 — справа, 2 — сверху\n\
+* j — если указан, преобразует видео/фото в формат, подходящий для кастомных эмодзи\n\
 * например /qva s5 e7 x2.5 r обрежет видео с 5 по 7 секунды, инвертирует полученный фрагмент и ускорит его в два с половиной раза\n\
 кря-кря.'
     context.bot.send_message(chat_id=update.effective_chat.id, text=reply,
@@ -140,6 +149,14 @@ def parse_video_arguments(line: str) -> VideoQuoteArguments:
                     exception_type=ProcessingException.ProcessingExceptionType.arguments_parsing_error,
                     additional_message="Несколько вхождений аргумента 'r*', не знаю, что делать :(")
             result.reverse = True
+        elif word == 'j':
+            if counts.is_emoji is None:
+                counts.is_emoji = True
+            else:
+                raise ProcessingException(
+                    exception_type=ProcessingException.ProcessingExceptionType.arguments_parsing_error,
+                    additional_message="Несколько вхождений аргумента 'j*', не знаю, что делать :(")
+            result.is_emoji = True
         else:
             raise ProcessingException(
                 exception_type=ProcessingException.ProcessingExceptionType.arguments_parsing_error,
@@ -175,6 +192,14 @@ def parse_photo_arguments(line: str) -> PhotoQuoteArguments:
                         additional_message=f"У меня есть только {BUBBLES_COUNT} пузырьков.")
 
             result.speech_bubble = random.randint(0, BUBBLES_COUNT - 1) if it.string == 'b' else int(it.string[1:]) - 1
+        elif word == 'j':
+            if counts.is_emoji is None:
+                counts.is_emoji = True
+            else:
+                raise ProcessingException(
+                    exception_type=ProcessingException.ProcessingExceptionType.arguments_parsing_error,
+                    additional_message="Несколько вхождений аргумента 'j*', не знаю, что делать :(")
+            result.is_emoji = True
         else:
             raise ProcessingException(
                 exception_type=ProcessingException.ProcessingExceptionType.arguments_parsing_error,
@@ -191,6 +216,7 @@ def video_quote(update: Update, context: CallbackContext):
 
     sticker = None
     try:
+        arguments = None
         if (original_message := message.reply_to_message) is not None:
             arguments = parse_video_arguments(message.text)
             if (video_note := original_message.video_note) is not None:  # circle video
@@ -215,14 +241,18 @@ def video_quote(update: Update, context: CallbackContext):
         # context.bot.create_new_sticker_set(user_id=admin_id, name=sticker_set_name, title='Sticker by @cryakwa_bot',
         #                                    webm_sticker=sticker,
         #                                    emojis="\U0001F60C")
-        context.bot.addStickerToSet(user_id=admin_id, name=sticker_set_name,
-                                    webm_sticker=sticker,
-                                    emojis=EMOJI_LIST[random.randint(0, len(EMOJI_LIST) - 1)])
-        sticker_set = context.bot.get_sticker_set(sticker_set_name)
-        update.message.reply_sticker(reply_to_message_id=update.effective_message.message_id,
-                                     sticker=sticker_set.stickers[-1])
-        for sticker in sticker_set.stickers[1:]:
-            context.bot.delete_sticker_from_set(sticker.file_id)
+        if arguments is not None and arguments.is_emoji:
+            update.message.reply_document(reply_to_message_id=update.effective_message.message_id,
+                                          document=sticker, filename=str(uuid4()) + '.webm')
+        else:
+            context.bot.addStickerToSet(user_id=admin_id, name=sticker_set_name,
+                                        webm_sticker=sticker,
+                                        emojis=EMOJI_LIST[random.randint(0, len(EMOJI_LIST) - 1)])
+            sticker_set = context.bot.get_sticker_set(sticker_set_name)
+            update.message.reply_sticker(reply_to_message_id=update.effective_message.message_id,
+                                         sticker=sticker_set.stickers[-1])
+            for sticker in sticker_set.stickers[1:]:
+                context.bot.delete_sticker_from_set(sticker.file_id)
 
         wait_message.delete()
     except ProcessingException as e:
@@ -240,6 +270,7 @@ def quote(update: Update, context: CallbackContext):
     # print(message)
     sticker = None
     try:
+        arguments = None
         if (original_message := message.reply_to_message) is not None:
             arguments = parse_photo_arguments(message.text)
             if (text := original_message.text) is not None:
@@ -279,14 +310,18 @@ def quote(update: Update, context: CallbackContext):
         # context.bot.create_new_sticker_set(user_id=admin_id, name=sticker_set_name, title='Sticker by @cryakwa_bot',
         #                                    png_sticker=sticker,
         #                                    emojis="\U0001F60C")
-        context.bot.addStickerToSet(user_id=admin_id, name=sticker_set_name,
-                                    png_sticker=sticker,
-                                    emojis=EMOJI_LIST[random.randint(0, len(EMOJI_LIST) - 1)])
-        sticker_set = context.bot.get_sticker_set(sticker_set_name)
-        update.message.reply_sticker(reply_to_message_id=update.effective_message.message_id,
-                                     sticker=sticker_set.stickers[-1])
-        for sticker in sticker_set.stickers[1:]:
-            context.bot.delete_sticker_from_set(sticker.file_id)
+        if arguments is not None and arguments.is_emoji:
+            update.message.reply_document(reply_to_message_id=update.effective_message.message_id,
+                                          document=sticker, )
+        else:
+            context.bot.addStickerToSet(user_id=admin_id, name=sticker_set_name,
+                                        png_sticker=sticker,
+                                        emojis=EMOJI_LIST[random.randint(0, len(EMOJI_LIST) - 1)])
+            sticker_set = context.bot.get_sticker_set(sticker_set_name)
+            update.message.reply_sticker(reply_to_message_id=update.effective_message.message_id,
+                                         sticker=sticker_set.stickers[-1])
+            for sticker in sticker_set.stickers[1:]:
+                context.bot.delete_sticker_from_set(sticker.file_id)
     except ProcessingException as e:
         reply_exception(reply_message=message, exception=e, update=update, context=context)
         return
@@ -297,6 +332,16 @@ def quote(update: Update, context: CallbackContext):
         return
 
 
+def get_sticker_id(update: Update, context: CallbackContext):
+    if update.message.reply_to_message.sticker is None:
+        context.bot.send_message(chat_id=update.effective_chat.id,
+                                 text="Команда должна быть отправлена в ответ на стикер",
+                                 reply_to_message_id=update.effective_message.message_id)
+    else:
+        context.bot.send_message(chat_id=update.effective_chat.id, text=update.message.reply_to_message.sticker.file_id,
+                                 reply_to_message_id=update.effective_message.message_id)
+
+
 def main():
     updater = Updater(token=token, use_context=True, workers=6)
     dispatcher = updater.dispatcher
@@ -304,14 +349,11 @@ def main():
     handler = MessageHandler((Filters.text | Filters.caption) & (~Filters.command), echo, run_async=True)
     command_handler = MessageHandler(Filters.command, command, run_async=True)
 
-    sticker2emoji_handler = MessageHandler(Filters.sticker, sticker2emoji_echo, run_async=True)
-    # sh = MessageHandler(Filters.sticker, on_sticker_sent)
-    # dispatcher.add_handler(sh)
     dispatcher.add_handler(handler)
     dispatcher.add_handler(command_handler)
-    dispatcher.add_handler(sticker2emoji_handler)
 
     print('STARTED')
+    updater.bot.sendMessage(chat_id=admin_id, text='Я снова здесь!')
     updater.start_polling(drop_pending_updates=True)
 
 

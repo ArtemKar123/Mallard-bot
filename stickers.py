@@ -32,12 +32,14 @@ class VideoQuoteArguments:
     speed: float = None  # x
     final_length: float = None  # l
     reverse: bool = None  # r
-    speech_bubble: int = None
+    speech_bubble: int = None  # b
+    is_emoji: bool = None  # j
 
 
 @dataclass
 class PhotoQuoteArguments:
-    speech_bubble: int = None
+    speech_bubble: int = None  # b
+    is_emoji: bool = None  # j
 
 
 def video2emoji(file_id: str, context: CallbackContext):
@@ -52,7 +54,7 @@ def video2emoji(file_id: str, context: CallbackContext):
 
         # count the number of frames
         fps = cap.get(cv2.CAP_PROP_FPS)
-
+        final_length = 2.9
         new_w = new_h = 100
         with tempfile.NamedTemporaryFile(suffix='.webm') as out_temp:
             query = f'ffmpeg -nostats \
@@ -60,10 +62,11 @@ def video2emoji(file_id: str, context: CallbackContext):
                                 -y \
                                 -i {temp.name} \
                                 -loop 1 \
-                                -c:v libvpx-vp9 -auto-alt-ref 0 \
+                                -c:v libvpx-vp9 \
                                 -preset ultrafast \
                                 -r {fps} \
-                                -s {new_w}x{new_h}\
+                                -s {new_w}x{new_h} \
+                                -t {final_length} \
                                 -an \
                                 {out_temp.name}'
             print(query)
@@ -79,16 +82,18 @@ def image2emoji(file_id: str, context: CallbackContext):
     image = None
 
     inp = np.asarray(bytearray(file_bytes), dtype=np.uint8)
-    image = cv2.imdecode(inp, cv2.IMREAD_COLOR)
+    image = cv2.imdecode(inp, cv2.IMREAD_UNCHANGED)
+    image = cv2.cvtColor(image, cv2.COLOR_RGB2RGBA)
 
     image = cv2.resize(image, (100, 100))
 
     is_success, buffer = cv2.imencode(".png", image)
-    sticker = BytesIO(buffer)
-    sticker.seek(0)
-    return sticker
+    emoji = BytesIO(buffer)
+    emoji.seek(0)
+    return emoji
 
 
+# FIXME: auto-alt-ref makes ffmpeg read video without alpha channel which should be fixed
 def file2animated_sticker(file_id: str, context: CallbackContext,
                           preprocess_type: FilePreprocessType = FilePreprocessType.default,
                           video_arguments: VideoQuoteArguments = VideoQuoteArguments()) -> BytesIO:
@@ -150,12 +155,13 @@ def file2animated_sticker(file_id: str, context: CallbackContext,
             fps = int(fps * video_arguments.speed)
         w = int(cap.get(3))
         h = int(cap.get(4))
+        desired_size = 100 if video_arguments.is_emoji else 512
         if w >= h:
-            new_h = int(h * (512 / w))
-            new_w = 512
+            new_h = int(h * (desired_size / w))
+            new_w = desired_size
         else:
-            new_w = int(w * (512 / h))
-            new_h = 512
+            new_w = int(w * (desired_size / h))
+            new_h = desired_size
         cap.release()
         print(new_w, new_h)
         with tempfile.NamedTemporaryFile(suffix='.webm') as out_temp:
@@ -169,9 +175,12 @@ def file2animated_sticker(file_id: str, context: CallbackContext,
                         bubble = cv2.imread(BUBBLE_NAMES[video_arguments.speech_bubble], cv2.IMREAD_UNCHANGED)
                         bubble = cv2.resize(bubble, (w, h))
                         cv2.imwrite(speech_bubble_temp.name, bubble)
-                    mask = np.full((512, 512, 4), (0, 0, 0, 0)).astype(np.uint8)
-                    mask = cv2.circle(mask, (255, 255), 250, (255, 255, 255, 255), thickness=-1)
+                    side_size = 100 if video_arguments.is_emoji else 512
+                    mask = np.full((side_size, side_size, 4), (0, 0, 0, 0)).astype(np.uint8)
+                    mask = cv2.circle(mask, (side_size // 2, side_size // 2), int(side_size * 0.976) // 2,
+                                      (255, 255, 255, 255), thickness=-1)
                     frame_circle = np.load('frame.dat', allow_pickle=True)
+                    frame_circle = cv2.resize(frame_circle, (desired_size, desired_size))
                     blurred = cv2.GaussianBlur(mask, (7, 7), 0)
                     mask[frame_circle == 255] = blurred[frame_circle == 255]
                     mask = cv2.resize(mask, (w, h))
@@ -261,23 +270,25 @@ def file2sticker(file_id: str, context: CallbackContext,
             cap.release()
     else:
         inp = np.asarray(bytearray(file_bytes), dtype=np.uint8)
-        image = cv2.imdecode(inp, cv2.IMREAD_COLOR)
+        image = cv2.imdecode(inp, cv2.IMREAD_UNCHANGED)
 
+    desired_size = 100 if photo_arguments.is_emoji else 512
     if image is None:
         return BytesIO()
     if preprocess_type == FilePreprocessType.circle:
-        image = cv2.resize(image, (512, 512))
+        image = cv2.resize(image, (desired_size, desired_size))
         image = cv2.cvtColor(image, cv2.COLOR_RGB2RGBA)
         thresh = np.load('mask.dat', allow_pickle=True)
+        thresh = cv2.resize(thresh, (desired_size, desired_size))
         image = cv2.bitwise_and(image, image, mask=thresh)
     elif preprocess_type in [FilePreprocessType.default, FilePreprocessType.video_thumb]:
         h, w = image.shape[:2]
         if w >= h:
-            new_h = int(h * (512 / w))
-            new_w = 512
+            new_h = int(h * (desired_size / w))
+            new_w = desired_size
         else:
-            new_w = int(w * (512 / h))
-            new_h = 512
+            new_w = int(w * (desired_size / h))
+            new_h = desired_size
         image = cv2.resize(image, (new_w, new_h))
         image = cv2.cvtColor(image, cv2.COLOR_RGB2RGBA)
 

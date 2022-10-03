@@ -1,5 +1,9 @@
 import random
-from content.dictionaries import BASIC_REPLIES_DICT, RANDOM_RESPONCES_DICT, RANDOM_STICKERS, EXCEPTIONS_DICT
+
+import typing
+
+from content.dictionaries import BASIC_REPLIES_DICT, RANDOM_RESPONCES_LIST, EXCEPTIONS_DICT
+from responses import *
 
 
 class Mallard:
@@ -11,16 +15,19 @@ class Mallard:
         self.RANDOM_ANSWER_RATE = random_answer_rate
         pass
 
-    def process(self, saying: str):
+    def process(self, saying: str) -> typing.Tuple[typing.Union[str, None], typing.Union[ResponseType, None]]:
         """
         :param saying:
+
+        :return: reply, is_sticker
         """
         if len(saying) == 0:
-            return None, False
+            return None, None
         if (reply := self.check_basic_saying_based_on_dict(saying, BASIC_REPLIES_DICT)) is not None:
-            return reply, False
+            return reply
         if (reply := self.generate_random_answer()) is not None:
             return reply
+        return None, None
 
     @staticmethod
     def check_basic_saying_based_on_dict(saying: str, basic_dict):
@@ -44,7 +51,8 @@ class Mallard:
 
         if (l := len(found_keywords)) > 0:
             chosen_keyword = found_keywords[random.randint(0, l - 1)]
-            return basic_dict[chosen_keyword][random.randint(0, len(basic_dict[chosen_keyword]) - 1)]
+            ret = basic_dict[chosen_keyword][random.randint(0, len(basic_dict[chosen_keyword]) - 1)]
+            return ret.text, ret.type
         return None
 
     def generate_random_answer(self):
@@ -52,10 +60,8 @@ class Mallard:
         says random stuff
         :return:
         """
-        answer_type = random.choices(population=[None, "Sticker", "Responce"],
-                                     weights=[self.RANDOM_ANSWER_RATE, 0.5, 0.5], k=1)[0]
-        if answer_type == "Responce":
-            return random.choice(RANDOM_RESPONCES_DICT), False
-        if answer_type == "Sticker":
-            return random.choice(RANDOM_STICKERS), True
-        return None, False
+        if random.randrange(self.RANDOM_ANSWER_RATE) != 0:
+            return None
+
+        ret = random.choice(RANDOM_RESPONCES_LIST)
+        return ret.text, ret.type
