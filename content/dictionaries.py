@@ -26,29 +26,63 @@ basic_text_replies = {
     'КВА': ['ква', 'ква!', 'ква-ква', 'ква)', 'ква\U0001F60C'],
     'КАР': ['кар', 'кар!', 'кар-кар', 'кар)', 'кар\U0001F60C'],
     'КРЯ': ['кря', 'кря!', 'кря-кря', 'кря)', 'кря\U0001F60C'],
-    'ХРЮ': ['хрю', 'хрюк', 'хрю-хрю', 'хряк', 'хрю\U0001F60C'],
-    'МИУ': ['ква\U0001F60C', 'кря\U0001F60C', 'миy\U0001F60C'],
+    'ХРЮ': ['хрю', 'хрюк', 'хрю-хрю'],
+    'МИУ': ['миy\U0001F60C'],
+    'МАВ': ['мав\U0001F60C'],
+    'ГАИНЬГ': ['скр пяу гаиньг', 'скр пяу', 'гаиньг', 'ало русский рэп?'],
     'ЧМОК': ['чмок', 'ты мне нравишься!!!', 'чмок\U0001F970'],
+    'МЫЫЫ': ['МЫЫЫЫЫЫЫЫЫЫ\U0001F970', 'МЫМЫМЫМЫ\U0001F970'],
+    'МЫМЫ': ['МЫЫЫЫЫЫЫЫЫЫ\U0001F970', 'МЫМЫМЫМЫ\U0001F970'],
 }
 
+# TODO: do smth with duplicates
 basic_sticker_replies = {
-    'КВА': ['CAACAgIAAxkBAAIESWM1aZ9RdG-lmZp1s6G43v0AAWkz9wACaxEAAoQoUUjd6i8SNVbr1SoE',  # Frog with wine
-            'CAACAgQAAxkBAAIEiWM1dv6UlBwAAakXetRKlhnhymykfwACawAD8YWLBHZImbEd8HQ_KgQ',  # Kermit hearts
-            'CAACAgQAAxkBAAIEi2M1d3bG7EYGTY7qYCzWRQI-0xEqAAIiAQACqCEhBsMhKQ89A7XmKgQ',  # Dancing Apu
-            ],
-    'КРЯ': ['CAACAgIAAxkBAAIER2M1aUsxYHmoj3SHqYn-X5mvCF98AAJqHQACYzEZSHXmSO3qgEwmKgQ',  # Spinning mallard
-            ],
-    'МИУ': ['CAACAgIAAxkBAAIEj2M1eDUwbTfBHMxBut_FsUFTscpRAALtHgACP7shSDUQ-4C6RGYZKgQ',  # Cat in milk
-            'CAACAgIAAxkBAAIElWM1eNbip3RITb16zOxw-wJDobgXAAIiEAACV2HJS1e96adku96ZKgQ',  # Cat jumps to you
-            'CAACAgIAAxkBAAIEl2M1eN3VUarEYilDZ81I1IDILRcqAAI6FAACh9vJS7eEtmgl-WtUKgQ',  # Cat runs to you
-            ],
-    'ЧМОК': ['CAACAgIAAxkBAAIES2M1cN1wtBwRBVJUrc41Q8IqUpdRAALbIQACh2hISahd3FVgrVqvKgQ',  # Kissing sticker
-             'CAACAgIAAxkBAAIEk2M1eL_ZB1rJK_YU3kPSepBCvIjPAAKfFQACXVnIS0QNrXBbo2y5KgQ',  # Cat kisses you
-             ],
-    'АРЧ': ['CAACAgIAAxkBAAILu2NIDKKE4m9XSO6rZsFurosK4O4yAAJ2IAACIutBSpGemvhk_ISKKgQ',  # KhB arch sticker
-            ],
-    'ARCH': ['CAACAgIAAxkBAAILu2NIDKKE4m9XSO6rZsFurosK4O4yAAJ2IAACIutBSpGemvhk_ISKKgQ',  # KhB arch sticker
-             ]
+    'КВА': [
+        'CAACAgIAAxkBAAIESWM1aZ9RdG-lmZp1s6G43v0AAWkz9wACaxEAAoQoUUjd6i8SNVbr1SoE',  # Frog with wine
+        'CAACAgQAAxkBAAIEiWM1dv6UlBwAAakXetRKlhnhymykfwACawAD8YWLBHZImbEd8HQ_KgQ',  # Kermit hearts
+        'CAACAgQAAxkBAAIEi2M1d3bG7EYGTY7qYCzWRQI-0xEqAAIiAQACqCEhBsMhKQ89A7XmKgQ',  # Dancing Apu
+    ],
+    'КРЯ': [
+        'CAACAgIAAxkBAAIER2M1aUsxYHmoj3SHqYn-X5mvCF98AAJqHQACYzEZSHXmSO3qgEwmKgQ',  # Spinning mallard
+    ],
+    'МИУ': [
+        'CAACAgIAAxkBAAIElWM1eNbip3RITb16zOxw-wJDobgXAAIiEAACV2HJS1e96adku96ZKgQ',  # Cat jumps to you
+        'CAACAgIAAxkBAAIEl2M1eN3VUarEYilDZ81I1IDILRcqAAI6FAACh9vJS7eEtmgl-WtUKgQ',  # Cat runs to you
+    ],
+    'МАВ': [
+        'CAACAgIAAxkBAAIElWM1eNbip3RITb16zOxw-wJDobgXAAIiEAACV2HJS1e96adku96ZKgQ',  # Cat jumps to you
+        'CAACAgIAAxkBAAIEl2M1eN3VUarEYilDZ81I1IDILRcqAAI6FAACh9vJS7eEtmgl-WtUKgQ',  # Cat runs to you
+    ],
+    'ЧМОК': [
+        'CAACAgIAAxkBAAIES2M1cN1wtBwRBVJUrc41Q8IqUpdRAALbIQACh2hISahd3FVgrVqvKgQ',  # Kissing sticker
+        'CAACAgIAAxkBAAIEk2M1eL_ZB1rJK_YU3kPSepBCvIjPAAKfFQACXVnIS0QNrXBbo2y5KgQ',  # Cat kisses you
+    ],
+    'АРЧ': [
+        'CAACAgIAAxkBAAILu2NIDKKE4m9XSO6rZsFurosK4O4yAAJ2IAACIutBSpGemvhk_ISKKgQ',  # KhB arch sticker
+    ],
+    'ARCH': [
+        'CAACAgIAAxkBAAILu2NIDKKE4m9XSO6rZsFurosK4O4yAAJ2IAACIutBSpGemvhk_ISKKgQ',  # KhB arch sticker
+    ],
+    'МЫЫЫ': [
+        'CAACAgIAAxkBAAIFR2NIKRInpx4s4nZlKXaXFAJPikHyAAK8IwACSIZISahn5qW-aEGrKgQ',  # Hearts face
+        'CAACAgIAAxkBAAIFSGNIKRvYzrUHB7ymrb-2XrATv8lzAALbIQACh2hISahd3FVgrVqvKgQ',  # Kiss
+        'CAACAgIAAxkBAAIFSWNIKSTf0R73OxeQHRrMaSuwSzHRAAJZIgAC7tFJSQF3F2uCltD_KgQ',  # Cat us
+    ],
+    'МЫМЫ': [
+        'CAACAgIAAxkBAAIFR2NIKRInpx4s4nZlKXaXFAJPikHyAAK8IwACSIZISahn5qW-aEGrKgQ',  # Hearts face
+        'CAACAgIAAxkBAAIFSGNIKRvYzrUHB7ymrb-2XrATv8lzAALbIQACh2hISahd3FVgrVqvKgQ',  # Kiss
+        'CAACAgIAAxkBAAIFSWNIKSTf0R73OxeQHRrMaSuwSzHRAAJZIgAC7tFJSQF3F2uCltD_KgQ',  # Cat us
+    ]
+}
+
+# TODO: do smth with unequal probability
+basic_voice_replies = {
+    'ХРЮ': ['hryak'],
+    'МИУ': ['purring1'],
+    'МАВ': ['purring1'],
+    'МЫЫЫ': ['us'],
+    'МЫМЫ': ['us'],
+    'ГАИНЬГ': ['gaing']
 }
 
 random_responses_text_list = [
@@ -86,15 +120,26 @@ random_responses_sticker_list = [
 
 ]
 
+random_responses_voice_list = [
+    'hryak',
+    'us',
+    'loud',
+    'gaing',
+    'purring1'
+]
+
 BASIC_REPLIES_DICT = {}
 generate_dictionary(target=BASIC_REPLIES_DICT, dictionary=basic_text_replies, response_type=ResponseType.TEXT)
 generate_dictionary(target=BASIC_REPLIES_DICT, dictionary=basic_sticker_replies, response_type=ResponseType.STICKER)
+generate_dictionary(target=BASIC_REPLIES_DICT, dictionary=basic_voice_replies, response_type=ResponseType.VOICE)
 
 RANDOM_RESPONCES_LIST = []
 generate_list(target=RANDOM_RESPONCES_LIST, dictionary=random_responses_text_list,
               response_type=ResponseType.TEXT)
 generate_list(target=RANDOM_RESPONCES_LIST, dictionary=random_responses_sticker_list,
               response_type=ResponseType.STICKER)
+generate_list(target=RANDOM_RESPONCES_LIST, dictionary=random_responses_voice_list,
+              response_type=ResponseType.VOICE)
 
 if __name__ == '__main__':
     print(len(BASIC_REPLIES_DICT))

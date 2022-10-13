@@ -5,6 +5,7 @@ from enum import Enum
 class ResponseType(Enum):
     TEXT = 1
     STICKER = 2
+    VOICE = 3
 
 
 @dataclass
