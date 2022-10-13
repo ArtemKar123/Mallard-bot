@@ -19,11 +19,7 @@ def generate_list(target: typing.List, dictionary: typing.List, response_type: R
 
 
 EXCEPTIONS_DICT = {
-    'КВА': [],
     'КАР': ['КАРТ'],
-    'КРЯ': [],
-    'ХРЮ': [],
-    'МИУ': [],
 }
 
 basic_text_replies = {
@@ -49,6 +45,10 @@ basic_sticker_replies = {
     'ЧМОК': ['CAACAgIAAxkBAAIES2M1cN1wtBwRBVJUrc41Q8IqUpdRAALbIQACh2hISahd3FVgrVqvKgQ',  # Kissing sticker
              'CAACAgIAAxkBAAIEk2M1eL_ZB1rJK_YU3kPSepBCvIjPAAKfFQACXVnIS0QNrXBbo2y5KgQ',  # Cat kisses you
              ],
+    'АРЧ': ['CAACAgIAAxkBAAILu2NIDKKE4m9XSO6rZsFurosK4O4yAAJ2IAACIutBSpGemvhk_ISKKgQ',  # KhB arch sticker
+            ],
+    'ARCH': ['CAACAgIAAxkBAAILu2NIDKKE4m9XSO6rZsFurosK4O4yAAJ2IAACIutBSpGemvhk_ISKKgQ',  # KhB arch sticker
+             ]
 }
 
 random_responses_text_list = [
