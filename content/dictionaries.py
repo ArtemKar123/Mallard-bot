@@ -33,6 +33,9 @@ basic_text_replies = {
     'ЧМОК': ['чмок', 'ты мне нравишься!!!', 'чмок\U0001F970'],
     'МЫЫЫ': ['МЫЫЫЫЫЫЫЫЫЫ\U0001F970', 'МЫМЫМЫМЫ\U0001F970'],
     'МЫМЫ': ['МЫЫЫЫЫЫЫЫЫЫ\U0001F970', 'МЫМЫМЫМЫ\U0001F970'],
+    'ФТОО': ['фтооо', 'чивооо', 'читооо'],
+    'ФТОФТО': ['фтооо', 'чивооо', 'читооо'],
+    'ЧИВОО': ['фтооо', 'чивооо', 'читооо'],
 }
 
 # TODO: do smth with duplicates
@@ -72,14 +75,26 @@ basic_sticker_replies = {
         'CAACAgIAAxkBAAIFR2NIKRInpx4s4nZlKXaXFAJPikHyAAK8IwACSIZISahn5qW-aEGrKgQ',  # Hearts face
         'CAACAgIAAxkBAAIFSGNIKRvYzrUHB7ymrb-2XrATv8lzAALbIQACh2hISahd3FVgrVqvKgQ',  # Kiss
         'CAACAgIAAxkBAAIFSWNIKSTf0R73OxeQHRrMaSuwSzHRAAJZIgAC7tFJSQF3F2uCltD_KgQ',  # Cat us
+    ],
+    'ФТОО': [
+        'CAACAgIAAxkBAAIF42NO3T-ikTjWnaIKw4NXp3qlE7e_AALnIAACnBRISUlZeonw23gyKgQ',
+        'CAACAgIAAxkBAAIF5GNO3URR4d7GRGkiPjPZxlpNIS3UAAK_FQACcPWhSzBi-XEOAbBAKgQ',
+    ],
+    'ЧИВОО': [
+        'CAACAgIAAxkBAAIF42NO3T-ikTjWnaIKw4NXp3qlE7e_AALnIAACnBRISUlZeonw23gyKgQ',
+        'CAACAgIAAxkBAAIF5GNO3URR4d7GRGkiPjPZxlpNIS3UAAK_FQACcPWhSzBi-XEOAbBAKgQ',
+    ],
+    'ФТОФТО': [
+        'CAACAgIAAxkBAAIF42NO3T-ikTjWnaIKw4NXp3qlE7e_AALnIAACnBRISUlZeonw23gyKgQ',
+        'CAACAgIAAxkBAAIF5GNO3URR4d7GRGkiPjPZxlpNIS3UAAK_FQACcPWhSzBi-XEOAbBAKgQ',
     ]
 }
 
 # TODO: do smth with unequal probability
 basic_voice_replies = {
     'ХРЮ': ['hryak'],
-    'МИУ': ['purring1'],
-    'МАВ': ['purring1'],
+    'МИУ': ['purring1', 'purring2'],
+    'МАВ': ['purring1', 'purring2'],
     'МЫЫЫ': ['us'],
     'МЫМЫ': ['us'],
     'ГАИНЬГ': ['gaing']
@@ -125,7 +140,8 @@ random_responses_voice_list = [
     'us',
     'loud',
     'gaing',
-    'purring1'
+    'purring1',
+    'purring2'
 ]
 
 BASIC_REPLIES_DICT = {}
