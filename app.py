@@ -76,7 +76,8 @@ def command(update: Update, context: CallbackContext):
         quote(update, context)
     elif update.message.text[:4] == '/qwa' or update.message.text[:4] == '/qva':
         video_quote(update, context)
-    elif update.message.text == f'/help{context.bot.name}':
+    elif update.message.text == f'/help{context.bot.name}' \
+            or (update.message.text == f'/help' and update.message.chat.type == 'private'):
         help(update, context)
     elif update.message.text == '/id':
         get_sticker_id(update, context)
