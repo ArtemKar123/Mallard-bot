@@ -141,7 +141,8 @@ random_responses_voice_list = [
     'loud',
     'gaing',
     'purring1',
-    'purring2'
+    'purring2',
+    'valera'
 ]
 
 BASIC_REPLIES_DICT = {}
