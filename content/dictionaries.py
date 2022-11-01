@@ -92,7 +92,7 @@ basic_sticker_replies = {
 
 # TODO: do smth with unequal probability
 basic_voice_replies = {
-    'ХРЮ': ['hryak', 'hryak2'],
+    'ХРЮ': ['hryak', 'hryak2', 'hryak3'],
     'МИУ': ['purring1', 'purring2'],
     'МАВ': ['purring1', 'purring2'],
     'МЫЫЫ': ['us'],
@@ -138,6 +138,7 @@ random_responses_sticker_list = [
 random_responses_voice_list = [
     'hryak',
     'hryak2',
+    'hryak3',
     'us',
     'loud',
     'gaing',
