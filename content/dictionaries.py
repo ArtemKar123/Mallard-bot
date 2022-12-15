@@ -1,5 +1,6 @@
 import typing
 from responses import *
+from enum import Enum
 
 BASIC_REPLIES_DICT: typing.Dict[str, typing.List[Response]]
 RANDOM_RESPONCES_LIST: typing.List[Response]
@@ -22,82 +23,96 @@ EXCEPTIONS_DICT = {
     'КАР': ['КАРТ'],
 }
 
-basic_text_replies = {
-    'КВА': ['ква', 'ква!', 'ква-ква', 'ква)', 'ква\U0001F60C'],
-    'КАР': ['кар', 'кар!', 'кар-кар', 'кар)', 'кар\U0001F60C'],
-    'КРЯ': ['кря', 'кря!', 'кря-кря', 'кря)', 'кря\U0001F60C'],
-    'ХРЮ': ['хрю', 'хрюк', 'хрю-хрю'],
-    'МИУ': ['миy\U0001F60C'],
-    'МАВ': ['мав\U0001F60C'],
-    'ГАИНЬГ': ['скр пяу гаиньг', 'скр пяу', 'гаиньг', 'ало русский рэп?'],
-    'ЧМОК': ['чмок', 'ты мне нравишься!!!', 'чмок\U0001F970'],
-    'МЫЫЫ': ['МЫЫЫЫЫЫЫЫЫЫ\U0001F970', 'МЫМЫМЫМЫ\U0001F970'],
-    'МЫМЫ': ['МЫЫЫЫЫЫЫЫЫЫ\U0001F970', 'МЫМЫМЫМЫ\U0001F970'],
-    'ФТОО': ['фтоооооо', 'чивоооооо', 'читоооооо'],
-    'ФТОФТО': ['фтоооооо', 'чивоооооо', 'читоооооо'],
-    'ЧИВОО': ['фтоооооо', 'чивоооооо', 'читоооооо'],
+
+class Keyword(Enum):
+    KVA = 1
+    KAR = 2
+    KRYA = 3
+    HRYU = 4
+    MIU = 5
+    MAV = 6
+    GAING = 7
+    KISS = 8
+    US = 9
+    WHAT = 10
+    ARCH = 11
+
+
+TEXT_KEYWORDS = {
+    'КВА': Keyword.KVA,
+    'КАР': Keyword.KAR,
+    'КРЯ': Keyword.KRYA,
+    'ХРЮ': Keyword.HRYU,
+    'МИУ': Keyword.MIU,
+    'МАВ': Keyword.MAV,
+    'ГАИНЬГ': Keyword.GAING,
+    'ЧМОК': Keyword.KISS,
+    'МЫЫЫ': Keyword.US,
+    'МЫМЫ': Keyword.US,
+    'ФТОО': Keyword.WHAT,
+    'ФТОФТО': Keyword.WHAT,
+    'ЧИВОО': Keyword.WHAT,
+    'ARCH': Keyword.ARCH,
+    'АРЧ': Keyword.ARCH
 }
 
-# TODO: do smth with duplicates
-basic_sticker_replies = {
-    'КВА': [
+combined_text_replies = {
+    Keyword.KVA: ['ква', 'ква!', 'ква-ква', 'ква)', 'ква\U0001F60C'],
+    Keyword.KAR: ['кар', 'кар!', 'кар-кар', 'кар)', 'кар\U0001F60C'],
+    Keyword.KRYA: ['кря', 'кря!', 'кря-кря', 'кря)', 'кря\U0001F60C'],
+    Keyword.HRYU: ['хрю', 'хрюк', 'хрю-хрю'],
+    Keyword.MIU: ['миy\U0001F60C'],
+    Keyword.MAV: ['мав\U0001F60C'],
+    Keyword.GAING: ['скр пяу гаиньг', 'скр пяу', 'гаиньг', 'ало русский рэп?'],
+    Keyword.KISS: ['чмок', 'ты мне нравишься!!!', 'чмок\U0001F970'],
+    Keyword.US: ['МЫЫЫЫЫЫЫЫЫЫ\U0001F970', 'МЫМЫМЫМЫ\U0001F970'],
+    Keyword.WHAT: ['фтоооооо', 'чивоооооо', 'читоооооо'],
+}
+combined_sticker_replies = {
+    Keyword.KVA: [
         'CAACAgIAAxkBAAIESWM1aZ9RdG-lmZp1s6G43v0AAWkz9wACaxEAAoQoUUjd6i8SNVbr1SoE',  # Frog with wine
         'CAACAgQAAxkBAAIEiWM1dv6UlBwAAakXetRKlhnhymykfwACawAD8YWLBHZImbEd8HQ_KgQ',  # Kermit hearts
         'CAACAgQAAxkBAAIEi2M1d3bG7EYGTY7qYCzWRQI-0xEqAAIiAQACqCEhBsMhKQ89A7XmKgQ',  # Dancing Apu
     ],
-    'КРЯ': [
+    Keyword.KRYA: [
         'CAACAgIAAxkBAAIER2M1aUsxYHmoj3SHqYn-X5mvCF98AAJqHQACYzEZSHXmSO3qgEwmKgQ',  # Spinning mallard
+        'CAACAgIAAxkBAAIF-WObMH_7uR5FLesxAq6mLbTXgtcZAAL2AANWnb0K99tOIUA-pYosBA',  # Evil Duck
+        'CAACAgIAAxkBAAIF_GObMIpWbfQUrqTOwEszPdmL14uTAAIJAQACVp29CtZmXIPXP6gdLAQ',  # Snow Duck
+        'CAACAgIAAxkBAAIF_2ObMJTxuaUT2odpn6I13qe0ZFBnAAILAQACVp29Ck6x56YI--1JLAQ',  # Exploding Duck
     ],
-    'МИУ': [
+    Keyword.MIU: [
         'CAACAgIAAxkBAAIElWM1eNbip3RITb16zOxw-wJDobgXAAIiEAACV2HJS1e96adku96ZKgQ',  # Cat jumps to you
         'CAACAgIAAxkBAAIEl2M1eN3VUarEYilDZ81I1IDILRcqAAI6FAACh9vJS7eEtmgl-WtUKgQ',  # Cat runs to you
     ],
-    'МАВ': [
+    Keyword.MAV: [
         'CAACAgIAAxkBAAIElWM1eNbip3RITb16zOxw-wJDobgXAAIiEAACV2HJS1e96adku96ZKgQ',  # Cat jumps to you
         'CAACAgIAAxkBAAIEl2M1eN3VUarEYilDZ81I1IDILRcqAAI6FAACh9vJS7eEtmgl-WtUKgQ',  # Cat runs to you
     ],
-    'ЧМОК': [
+    Keyword.KISS: [
         'CAACAgIAAxkBAAIES2M1cN1wtBwRBVJUrc41Q8IqUpdRAALbIQACh2hISahd3FVgrVqvKgQ',  # Kissing sticker
         'CAACAgIAAxkBAAIEk2M1eL_ZB1rJK_YU3kPSepBCvIjPAAKfFQACXVnIS0QNrXBbo2y5KgQ',  # Cat kisses you
     ],
-    'АРЧ': [
+    Keyword.ARCH: [
         'CAACAgIAAxkBAAILu2NIDKKE4m9XSO6rZsFurosK4O4yAAJ2IAACIutBSpGemvhk_ISKKgQ',  # KhB arch sticker
     ],
-    'ARCH': [
-        'CAACAgIAAxkBAAILu2NIDKKE4m9XSO6rZsFurosK4O4yAAJ2IAACIutBSpGemvhk_ISKKgQ',  # KhB arch sticker
-    ],
-    'МЫЫЫ': [
+    Keyword.US: [
         'CAACAgIAAxkBAAIFR2NIKRInpx4s4nZlKXaXFAJPikHyAAK8IwACSIZISahn5qW-aEGrKgQ',  # Hearts face
         'CAACAgIAAxkBAAIFSGNIKRvYzrUHB7ymrb-2XrATv8lzAALbIQACh2hISahd3FVgrVqvKgQ',  # Kiss
         'CAACAgIAAxkBAAIFSWNIKSTf0R73OxeQHRrMaSuwSzHRAAJZIgAC7tFJSQF3F2uCltD_KgQ',  # Cat us
     ],
-    'МЫМЫ': [
-        'CAACAgIAAxkBAAIFR2NIKRInpx4s4nZlKXaXFAJPikHyAAK8IwACSIZISahn5qW-aEGrKgQ',  # Hearts face
-        'CAACAgIAAxkBAAIFSGNIKRvYzrUHB7ymrb-2XrATv8lzAALbIQACh2hISahd3FVgrVqvKgQ',  # Kiss
-        'CAACAgIAAxkBAAIFSWNIKSTf0R73OxeQHRrMaSuwSzHRAAJZIgAC7tFJSQF3F2uCltD_KgQ',  # Cat us
-    ],
-    'ФТОО': [
+    Keyword.WHAT: [
         'CAACAgIAAxkBAAIF42NO3T-ikTjWnaIKw4NXp3qlE7e_AALnIAACnBRISUlZeonw23gyKgQ',
         'CAACAgIAAxkBAAIF5GNO3URR4d7GRGkiPjPZxlpNIS3UAAK_FQACcPWhSzBi-XEOAbBAKgQ',
+        'CAACAgIAAxkBAAIF_2ObMJTxuaUT2odpn6I13qe0ZFBnAAILAQACVp29Ck6x56YI--1JLAQ',  # Exploding Duck
     ],
-    'ЧИВОО': [
-        'CAACAgIAAxkBAAIF42NO3T-ikTjWnaIKw4NXp3qlE7e_AALnIAACnBRISUlZeonw23gyKgQ',
-        'CAACAgIAAxkBAAIF5GNO3URR4d7GRGkiPjPZxlpNIS3UAAK_FQACcPWhSzBi-XEOAbBAKgQ',
-    ],
-    'ФТОФТО': [
-        'CAACAgIAAxkBAAIF42NO3T-ikTjWnaIKw4NXp3qlE7e_AALnIAACnBRISUlZeonw23gyKgQ',
-        'CAACAgIAAxkBAAIF5GNO3URR4d7GRGkiPjPZxlpNIS3UAAK_FQACcPWhSzBi-XEOAbBAKgQ',
-    ]
 }
 
-# TODO: do smth with unequal probability
 basic_voice_replies = {
-    'ХРЮ': ['hryak', 'hryak2', 'hryak3'],
-    'МИУ': ['purring1', 'purring2'],
-    'МАВ': ['purring1', 'purring2'],
-    'МЫЫЫ': ['us'],
-    'МЫМЫ': ['us'],
-    'ГАИНЬГ': ['gaing']
+    Keyword.HRYU: ['hryak', 'hryak2', 'hryak3'],
+    Keyword.MIU: ['purring1', 'purring2'],
+    Keyword.MAV: ['purring1', 'purring2'],
+    Keyword.US: ['us'],
+    Keyword.GAING: ['gaing']
 }
 
 random_responses_text_list = [
@@ -132,6 +147,9 @@ random_responses_sticker_list = [
     'CAACAgIAAxkBAAID72MH4d8wJ8C1AyLG_0OCcfPStsZiAALnHQACA7woSCTavYd7l5r_KQQ',
     'CAACAgIAAxkBAAID8GMH4d9_Rp46uGXN85mt-uPRNhBaAAL7IAACDo8gSGhCetlzmDBvKQQ',
     'CAACAgIAAxkBAAID8WMH4eBkZrSXradn0MbZOhplzO6JAAJVHwACp3NASCCGtxiyz6VgKQQ',
+    'CAACAgIAAxkBAAIF-WObMH_7uR5FLesxAq6mLbTXgtcZAAL2AANWnb0K99tOIUA-pYosBA',  # Evil Duck
+    'CAACAgIAAxkBAAIF_GObMIpWbfQUrqTOwEszPdmL14uTAAIJAQACVp29CtZmXIPXP6gdLAQ',  # Snow Duck
+    'CAACAgIAAxkBAAIF_2ObMJTxuaUT2odpn6I13qe0ZFBnAAILAQACVp29Ck6x56YI--1JLAQ',  # Exploding Duck
 
 ]
 
@@ -148,8 +166,8 @@ random_responses_voice_list = [
 ]
 
 BASIC_REPLIES_DICT = {}
-generate_dictionary(target=BASIC_REPLIES_DICT, dictionary=basic_text_replies, response_type=ResponseType.TEXT)
-generate_dictionary(target=BASIC_REPLIES_DICT, dictionary=basic_sticker_replies, response_type=ResponseType.STICKER)
+generate_dictionary(target=BASIC_REPLIES_DICT, dictionary=combined_text_replies, response_type=ResponseType.TEXT)
+generate_dictionary(target=BASIC_REPLIES_DICT, dictionary=combined_sticker_replies, response_type=ResponseType.STICKER)
 generate_dictionary(target=BASIC_REPLIES_DICT, dictionary=basic_voice_replies, response_type=ResponseType.VOICE)
 
 RANDOM_RESPONCES_LIST = []

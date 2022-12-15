@@ -2,7 +2,7 @@ import random
 
 import typing
 
-from content.dictionaries import BASIC_REPLIES_DICT, RANDOM_RESPONCES_LIST, EXCEPTIONS_DICT
+from content.dictionaries import BASIC_REPLIES_DICT, RANDOM_RESPONCES_LIST, EXCEPTIONS_DICT, TEXT_KEYWORDS
 from responses import *
 
 
@@ -23,22 +23,22 @@ class Mallard:
         """
         if len(saying) == 0:
             return None, None
-        if (reply := self.check_basic_saying_based_on_dict(saying, BASIC_REPLIES_DICT)) is not None:
+        if (reply := self.check_basic_saying_based_on_dict(saying, basic_dict=BASIC_REPLIES_DICT)) is not None:
             return reply
         if (reply := self.generate_random_answer()) is not None:
             return reply
         return None, None
 
     @staticmethod
-    def check_basic_saying_based_on_dict(saying: str, basic_dict):
+    def check_basic_saying_based_on_dict(saying: str, basic_dict, keywords=TEXT_KEYWORDS, ):
         """
         Checks if saying has some basic words to reply (like "ква").
         :param saying:
         """
         saying = saying.upper()
         found_keywords = []
-        for keyword in basic_dict.keys():
-            if (upper := keyword.upper()) in saying and len(basic_dict[keyword]) > 0:
+        for keyword in keywords.keys():
+            if (upper := keyword.upper()) in saying and len(basic_dict[keywords[keyword]]) > 0:
                 found_keywords.append(upper)
 
         for i in range(len(found_keywords)):
@@ -50,7 +50,7 @@ class Mallard:
                     break
 
         if (l := len(found_keywords)) > 0:
-            chosen_keyword = found_keywords[random.randint(0, l - 1)]
+            chosen_keyword = keywords[found_keywords[random.randint(0, l - 1)]]
             ret = basic_dict[chosen_keyword][random.randint(0, len(basic_dict[chosen_keyword]) - 1)]
             return ret.text, ret.type
         return None
