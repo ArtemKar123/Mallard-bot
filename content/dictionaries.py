@@ -35,7 +35,8 @@ class Keyword(Enum):
     KISS = 8
     US = 9
     WHAT = 10
-    ARCH = 11
+    ARCH = 11,
+    WOOF = 12
 
 
 TEXT_KEYWORDS = {
@@ -53,7 +54,8 @@ TEXT_KEYWORDS = {
     'ФТОФТО': Keyword.WHAT,
     'ЧИВОО': Keyword.WHAT,
     'ARCH': Keyword.ARCH,
-    'АРЧ': Keyword.ARCH
+    'АРЧ': Keyword.ARCH,
+    'ТЯВ': Keyword.WOOF
 }
 
 combined_text_replies = {
@@ -61,6 +63,7 @@ combined_text_replies = {
     Keyword.KAR: ['кар', 'кар!', 'кар-кар', 'кар)', 'кар\U0001F60C'],
     Keyword.KRYA: ['кря', 'кря!', 'кря-кря', 'кря)', 'кря\U0001F60C'],
     Keyword.HRYU: ['хрю', 'хрюк', 'хрю-хрю'],
+    Keyword.WOOF: ['тяв', 'тяв\U0001F60C', 'тяв-тяв'],
     Keyword.MIU: ['миy\U0001F60C'],
     Keyword.MAV: ['мав\U0001F60C'],
     Keyword.GAING: ['скр пяу гаиньг', 'скр пяу', 'гаиньг', 'ало русский рэп?'],
@@ -87,6 +90,14 @@ combined_sticker_replies = {
     Keyword.MAV: [
         'CAACAgIAAxkBAAIElWM1eNbip3RITb16zOxw-wJDobgXAAIiEAACV2HJS1e96adku96ZKgQ',  # Cat jumps to you
         'CAACAgIAAxkBAAIEl2M1eN3VUarEYilDZ81I1IDILRcqAAI6FAACh9vJS7eEtmgl-WtUKgQ',  # Cat runs to you
+    ],
+    Keyword.WOOF: [
+        'CAACAgIAAxkBAAI5vmOfEDYHgMiG9S5Gx4TKGTGF9mT9AALHLwACeIv4SEdXNRvd2S1SLAQ',
+        'CAACAgIAAxkBAAI5v2OfEDdh1Ocm8I6DdVGR-mm-qASWAAJ1IwACi5H4SH5HSf9EkicCLAQ',
+        'CAACAgIAAxkBAAI5wGOfEDfkM_gSvLpw5bNcpVdamKPjAAKYKAACgBz5SGvBWQcrxBnfLAQ',
+        'CAACAgIAAxkBAAI5wWOfEDgTSHy3vI8O_vURd34kfeAGAALsIgAC_lcAAUkD28bbNUrhISwE',
+        'CAACAgIAAxkBAAI5wmOfEDhXnlh2b8W9vyyqAAF13e0vCgACHiIAAq-d-UjzvXUoB6uYECwE',
+
     ],
     Keyword.KISS: [
         'CAACAgIAAxkBAAIES2M1cN1wtBwRBVJUrc41Q8IqUpdRAALbIQACh2hISahd3FVgrVqvKgQ',  # Kissing sticker
@@ -150,7 +161,7 @@ random_responses_sticker_list = [
     'CAACAgIAAxkBAAIF-WObMH_7uR5FLesxAq6mLbTXgtcZAAL2AANWnb0K99tOIUA-pYosBA',  # Evil Duck
     'CAACAgIAAxkBAAIF_GObMIpWbfQUrqTOwEszPdmL14uTAAIJAQACVp29CtZmXIPXP6gdLAQ',  # Snow Duck
     'CAACAgIAAxkBAAIF_2ObMJTxuaUT2odpn6I13qe0ZFBnAAILAQACVp29Ck6x56YI--1JLAQ',  # Exploding Duck
-
+    'CAACAgIAAxkBAAI5wWOfEDgTSHy3vI8O_vURd34kfeAGAALsIgAC_lcAAUkD28bbNUrhISwE',  # No bitches dog
 ]
 
 random_responses_voice_list = [
