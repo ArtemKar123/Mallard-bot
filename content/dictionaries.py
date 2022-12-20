@@ -55,7 +55,8 @@ TEXT_KEYWORDS = {
     'ЧИВОО': Keyword.WHAT,
     'ARCH': Keyword.ARCH,
     'АРЧ': Keyword.ARCH,
-    'ТЯВ': Keyword.WOOF
+    'ТЯВ': Keyword.WOOF,
+    'ГАВ': Keyword.WOOF
 }
 
 combined_text_replies = {
@@ -97,7 +98,7 @@ combined_sticker_replies = {
         'CAACAgIAAxkBAAI5wGOfEDfkM_gSvLpw5bNcpVdamKPjAAKYKAACgBz5SGvBWQcrxBnfLAQ',
         'CAACAgIAAxkBAAI5wWOfEDgTSHy3vI8O_vURd34kfeAGAALsIgAC_lcAAUkD28bbNUrhISwE',
         'CAACAgIAAxkBAAI5wmOfEDhXnlh2b8W9vyyqAAF13e0vCgACHiIAAq-d-UjzvXUoB6uYECwE',
-
+        'CAACAgIAAxkBAAI7nWOhYJEd8ZXuAAGHURhFvoPJxXal-QACGSAAAmHeEElmhbbxu-s_ECwE',
     ],
     Keyword.KISS: [
         'CAACAgIAAxkBAAIES2M1cN1wtBwRBVJUrc41Q8IqUpdRAALbIQACh2hISahd3FVgrVqvKgQ',  # Kissing sticker
