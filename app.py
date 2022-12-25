@@ -40,6 +40,18 @@ def sticker2emoji_echo(update: Update, context: CallbackContext):
     update.message.reply_document(document=emoji)
 
 
+def download_voice(update: Update, context: CallbackContext, name=str(uuid4())):
+    print(update.message)
+    if update.message.reply_to_message is None or update.message.reply_to_message.voice is None \
+            or update.message.chat.type != 'private':
+        return
+    print('ok')
+    original_message = update.message.reply_to_message
+    file_bytes = context.bot.getFile(original_message.voice.file_id).download_as_bytearray()
+    with open(f'voices/{name}.ogg', 'wb') as f:
+        f.write(file_bytes)
+
+
 def echo(update: Update, context: CallbackContext):
     text = update.message.text if update.message.text is not None else update.message.caption
     if text is None:
@@ -52,6 +64,10 @@ def echo(update: Update, context: CallbackContext):
         elif reply_type == ResponseType.TEXT:
             context.bot.send_message(chat_id=update.effective_chat.id, text=reply,
                                      reply_to_message_id=update.effective_message.message_id)
+        elif reply_type == ResponseType.VOICE:
+            with open(f'voices/{reply}.ogg', 'rb') as f:
+                context.bot.send_voice(chat_id=update.effective_chat.id, voice=f.read(),
+                                       reply_to_message_id=update.effective_message.message_id)
 
 
 def command(update: Update, context: CallbackContext):
@@ -60,10 +76,13 @@ def command(update: Update, context: CallbackContext):
         quote(update, context)
     elif update.message.text[:4] == '/qwa' or update.message.text[:4] == '/qva':
         video_quote(update, context)
-    elif update.message.text == f'/help{context.bot.name}':
+    elif update.message.text == f'/help{context.bot.name}' \
+            or (update.message.text == f'/help' and update.message.chat.type == 'private'):
         help(update, context)
     elif update.message.text == '/id':
         get_sticker_id(update, context)
+    elif update.message.text.split(' ')[0] == '/voice':
+        download_voice(update, context, name=update.message.text.split(' ')[1])
     elif update.message.text == '/emoji':
         sticker2emoji_echo(update, context)
 
