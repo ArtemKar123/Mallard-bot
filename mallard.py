@@ -2,8 +2,11 @@ import random
 
 import typing
 
-from content.dictionaries import BASIC_REPLIES_DICT, RANDOM_RESPONCES_LIST, EXCEPTIONS_DICT, TEXT_KEYWORDS
+from content.dictionaries import BASIC_REPLIES_DICT, RANDOM_RESPONCES_LIST, EXCEPTIONS_DICT, TEXT_KEYWORDS, \
+    CREATURES_LIST
 from responses import *
+import hashlib
+import datetime
 
 
 class Mallard:
@@ -14,6 +17,10 @@ class Mallard:
     def __init__(self, random_answer_rate=200):
         self.RANDOM_ANSWER_RATE = random_answer_rate
         pass
+
+    def get_creature(self, id):
+        index = int(hashlib.sha1(str(datetime.date).encode("utf-8")).hexdigest(), 16) % (10 ** 8) + id
+        return CREATURES_LIST[index % len(CREATURES_LIST)]
 
     def process(self, saying: str) -> typing.Tuple[typing.Union[str, None], typing.Union[ResponseType, None]]:
         """

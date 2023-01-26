@@ -177,6 +177,14 @@ random_responses_voice_list = [
     'valera'
 ]
 
+CREATURES_LIST = [
+    'Я жабка! Ква-ква!\U0001F438',
+    'Я уточка! Кря-кря!\U0001F986',
+    'Я котик! Миуууу!\U0001F408',
+    'Я пёсик! Тяв-тяв!\U0001F436',
+    'Я хрюшка! Хрю-хрю!\U0001F437',
+]
+
 BASIC_REPLIES_DICT = {}
 generate_dictionary(target=BASIC_REPLIES_DICT, dictionary=combined_text_replies, response_type=ResponseType.TEXT)
 generate_dictionary(target=BASIC_REPLIES_DICT, dictionary=combined_sticker_replies, response_type=ResponseType.STICKER)
