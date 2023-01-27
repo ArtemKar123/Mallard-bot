@@ -42,7 +42,7 @@ class Mallard:
         :param saying:
         """
         if saying in CREATURES_LIST:
-            return
+            return None
         saying = saying.upper()
         found_keywords = []
         for keyword in keywords.keys():
