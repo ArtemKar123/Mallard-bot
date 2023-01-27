@@ -41,6 +41,8 @@ class Mallard:
         Checks if saying has some basic words to reply (like "ква").
         :param saying:
         """
+        if saying in CREATURES_LIST:
+            return
         saying = saying.upper()
         found_keywords = []
         for keyword in keywords.keys():
