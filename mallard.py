@@ -18,9 +18,8 @@ class Mallard:
         self.RANDOM_ANSWER_RATE = random_answer_rate
         pass
 
-    def get_creature(self, id):
-        index = int(hashlib.sha1(str(datetime.date).encode("utf-8")).hexdigest(), 16) % (10 ** 8) + id
-        return CREATURES_LIST[index % len(CREATURES_LIST)]
+    def get_creature(self, ):
+        return random.choice(CREATURES_LIST)
 
     def process(self, saying: str) -> typing.Tuple[typing.Union[str, None], typing.Union[ResponseType, None]]:
         """

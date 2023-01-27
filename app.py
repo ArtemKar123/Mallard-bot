@@ -369,12 +369,12 @@ def inline_query(update: Update, context):
             title="Кто ты сегодня?",
             thumb_url="https://i.ibb.co/6HPDsj7/2023-01-27-01-10-28.jpg",
             input_message_content=InputTextMessageContent(
-                f"<i>{mallard.get_creature(update.inline_query.from_user.id)}</i>", parse_mode=ParseMode.HTML
+                f"<i>{mallard.get_creature()}</i>", parse_mode=ParseMode.HTML
             ),
         ),
     ]
 
-    update.inline_query.answer(results)
+    update.inline_query.answer(results, cache_time=60 * 60 * 3, is_personal=True)
 
 
 def main():
