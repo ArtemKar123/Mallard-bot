@@ -119,73 +119,25 @@ def reply_exception(reply_message: telegram.message = None, exception: Processin
 
 def parse_video_arguments(line: str) -> VideoQuoteArguments:
     result = VideoQuoteArguments()
-    counts = VideoQuoteArguments(0, 0, 0)
     words = line.split()
     for word in words[1:]:
         if (it := re.search(r's\d+', word)) is not None:
-            counts.starting_point += 1
-            if counts.starting_point > 1:
-                raise ProcessingException(
-                    exception_type=ProcessingException.ProcessingExceptionType.arguments_parsing_error,
-                    additional_message="Несколько вхождений аргумента 's*', не знаю, что делать :(")
-            result.starting_point = int(it.string[1:])
+            result.set_field('starting_point', int(it.string[1:]))
         elif (it := re.search(r'e\d+', word)) is not None:
-            counts.end_point += 1
-            if counts.end_point > 1:
-                raise ProcessingException(
-                    exception_type=ProcessingException.ProcessingExceptionType.arguments_parsing_error,
-                    additional_message="Несколько вхождений аргумента 'e*', не знаю, что делать :(")
-            result.end_point = int(it.string[1:])
+            result.set_field('end_point', int(it.string[1:]))
         elif (it := re.search(r'x\d+\.?\d*', word)) is not None:
-            counts.speed = 1 if counts.speed is None else counts.speed + 1
-            if counts.speed > 1:
-                raise ProcessingException(
-                    exception_type=ProcessingException.ProcessingExceptionType.arguments_parsing_error,
-                    additional_message="Несколько вхождений аргумента 'x*', не знаю, что делать :(")
-            result.speed = float(it.string[1:])
+            result.set_field('speed', float(it.string[1:]))
         elif (it := re.search(r'b\d*', word)) is not None:
-            counts.speech_bubble = 1 if counts.speech_bubble is None else counts.speech_bubble + 1
-            if counts.speech_bubble > 1:
-                raise ProcessingException(
-                    exception_type=ProcessingException.ProcessingExceptionType.arguments_parsing_error,
-                    additional_message="Несколько вхождений аргумента 'b*', не знаю, что делать :(")
-            if len(it.string) > 1:
-                bubble_id = int(it.string[1:])
-                if bubble_id < 1:
-                    raise ProcessingException(
-                        exception_type=ProcessingException.ProcessingExceptionType.arguments_parsing_error,
-                        additional_message="Номер не может быть меньше 1.")
-                if bubble_id > BUBBLES_COUNT:
-                    raise ProcessingException(
-                        exception_type=ProcessingException.ProcessingExceptionType.arguments_parsing_error,
-                        additional_message=f"Количество пузырьков в коллекции: {BUBBLES_COUNT}.")
-
-            result.speech_bubble = random.randint(0, BUBBLES_COUNT - 1) if it.string == 'b' else int(it.string[1:]) - 1
+            result.set_field('speech_bubble', random.randint(0, BUBBLES_COUNT - 1) if it.string == 'b' else int(it.string[1:]) - 1)
         elif word == 'r':
-            if counts.reverse is None:
-                counts.reverse = True
-            else:
-                raise ProcessingException(
-                    exception_type=ProcessingException.ProcessingExceptionType.arguments_parsing_error,
-                    additional_message="Несколько вхождений аргумента 'r*', не знаю, что делать :(")
-            result.reverse = True
+            result.set_field('reverse', True)
         elif word == 'j':
-            if counts.is_emoji is None:
-                counts.is_emoji = True
-            else:
-                raise ProcessingException(
-                    exception_type=ProcessingException.ProcessingExceptionType.arguments_parsing_error,
-                    additional_message="Несколько вхождений аргумента 'j*', не знаю, что делать :(")
-            result.is_emoji = True
+            result.set_field('is_emoji', True)
         else:
             raise ProcessingException(
                 exception_type=ProcessingException.ProcessingExceptionType.arguments_parsing_error,
                 additional_message=f'"{word}" не подходит как аргумент для команды.')
-        if counts.end_point == 1 and counts.starting_point == 0:
-            raise ProcessingException(
-                exception_type=ProcessingException.ProcessingExceptionType.arguments_parsing_error,
-                additional_message=f'Параметр "e*" должен использоваться только вместе с "s*".')
-
+    result.validate()
     return result
 
 

@@ -10,7 +10,7 @@ from PIL import Image, ImageDraw, ImageFont, ImageFilter
 import random
 from dataclasses import dataclass
 from exceptions import ProcessingException
-from content.bubbles.bubbles import BUBBLE_NAMES
+from content.bubbles.bubbles import BUBBLE_NAMES, BUBBLES_COUNT
 
 
 class FilePreprocessType(enum.Enum):
@@ -19,6 +19,17 @@ class FilePreprocessType(enum.Enum):
     video_thumb = 2
     animation = 3
     default = 4
+
+
+def validate_speech_bubble(value):
+    if value < 1:
+        raise ProcessingException(
+            exception_type=ProcessingException.ProcessingExceptionType.arguments_parsing_error,
+            additional_message="Номер не может быть меньше 1.")
+    if value > BUBBLES_COUNT:
+        raise ProcessingException(
+            exception_type=ProcessingException.ProcessingExceptionType.arguments_parsing_error,
+            additional_message=f"Количество пузырьков в коллекции: {BUBBLES_COUNT}.")
 
 
 @dataclass
@@ -35,12 +46,30 @@ class VideoQuoteArguments:
     speech_bubble: int = None  # b
     is_emoji: bool = None  # j
 
+    def field_name_to_flag(self, field_name):
+        mp = {name: flag for (name, flag) in zip(self.__annotations__.keys(), ('s', 'e', 'x', 'l', 'r', 'b', 'j'))}
+        return mp[field_name]
+
+    def set_field(self, field, value):
+        if getattr(self, field) is not None:
+            raise ProcessingException(
+                exception_type=ProcessingException.ProcessingExceptionType.arguments_parsing_error,
+                additional_message=f"Несколько вхождений аргумента '{self.field_name_to_flag(field)}*', не знаю, что делать :(")
+        if field == 'speech_bubble':
+            validate_speech_bubble(value)
+        setattr(self, field, value)
+
+    def validate(self):
+        if self.end_point is not None and self.starting_point is None:
+            raise ProcessingException(
+                exception_type=ProcessingException.ProcessingExceptionType.arguments_parsing_error,
+                additional_message=f'Параметр "e*" должен использоваться только вместе с "s*".')
+
 
 @dataclass
 class PhotoQuoteArguments:
     speech_bubble: int = None  # b
     is_emoji: bool = None  # j
-
 
 def video2emoji(file_id: str, context: CallbackContext):
     print('video2emoji')
@@ -75,7 +104,6 @@ def video2emoji(file_id: str, context: CallbackContext):
             emoji = BytesIO(out_temp.read())
             emoji.seek(0)
     return emoji
-
 
 def image2emoji(file_id: str, context: CallbackContext):
     file_bytes = context.bot.getFile(file_id).download_as_bytearray()
@@ -252,7 +280,6 @@ def file2animated_sticker(file_id: str, context: CallbackContext,
             sticker = BytesIO(out_temp.read())
             sticker.seek(0)
     return sticker
-
 
 def file2sticker(file_id: str, context: CallbackContext,
                  preprocess_type: FilePreprocessType = FilePreprocessType.default,
