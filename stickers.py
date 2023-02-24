@@ -71,6 +71,20 @@ class PhotoQuoteArguments:
     speech_bubble: int = None  # b
     is_emoji: bool = None  # j
 
+    def field_name_to_flag(self, field_name):
+        mp = {name: flag for (name, flag) in zip(self.__annotations__.keys(), ('b', 'j'))}
+        return mp[field_name]
+
+    def set_field(self, field, value):
+        if getattr(self, field) is not None:
+            raise ProcessingException(
+                exception_type=ProcessingException.ProcessingExceptionType.arguments_parsing_error,
+                additional_message=f"Несколько вхождений аргумента '{self.field_name_to_flag(field)}*', не знаю, что делать :(")
+        if field == 'speech_bubble':
+            validate_speech_bubble(value)
+        setattr(self, field, value)
+
+
 def video2emoji(file_id: str, context: CallbackContext):
     print('video2emoji')
     file_bytes = context.bot.getFile(file_id).download_as_bytearray()
@@ -125,6 +139,8 @@ def image2emoji(file_id: str, context: CallbackContext):
 def file2animated_sticker(file_id: str, context: CallbackContext,
                           preprocess_type: FilePreprocessType = FilePreprocessType.default,
                           video_arguments: VideoQuoteArguments = VideoQuoteArguments()) -> BytesIO:
+    if file_id is None:
+        raise ProcessingException(exception_type=ProcessingException.ProcessingExceptionType.wrong_source_type)
     file_bytes = context.bot.getFile(file_id).download_as_bytearray()
     sticker = None
     original_arguments = video_arguments
@@ -281,14 +297,16 @@ def file2animated_sticker(file_id: str, context: CallbackContext,
             sticker.seek(0)
     return sticker
 
+
 def file2sticker(file_id: str, context: CallbackContext,
                  preprocess_type: FilePreprocessType = FilePreprocessType.default,
                  photo_arguments: PhotoQuoteArguments = PhotoQuoteArguments()) -> BytesIO:
-    print(photo_arguments.speech_bubble)
+    if file_id is None:
+        raise ProcessingException(exception_type=ProcessingException.ProcessingExceptionType.wrong_source_type)
+    # print(photo_arguments.speech_bubble)
     file_bytes = context.bot.getFile(file_id).download_as_bytearray()
-    image = None
     if preprocess_type == FilePreprocessType.video_thumb:
-        file_bytes = context.bot.getFile(file_id).download_as_bytearray()
+        # file_bytes = context.bot.getFile(file_id).download_as_bytearray()
         with tempfile.NamedTemporaryFile() as temp:
             temp.write(file_bytes)
 
