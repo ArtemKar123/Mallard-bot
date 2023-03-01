@@ -18,3 +18,5 @@ You can also use following parameters with `/qva`:
 * For example `/qva s5 e7 x2.5 r` will crop video from 00:05—00:07, invert it and speed it up by two times.
 
 Two add sticker to your sticker pack use [stickerpack creation bot](https://t.me/fStikBot).
+
+![/qva example](media/sticker.gif)
