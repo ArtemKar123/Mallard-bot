@@ -25,4 +25,4 @@
 
 Чтобы добавить полученный стикер в свой набор перешлите его [боту для создания стикерпаков](https://t.me/fStikBot).
 
-![/qva example](media/sticker.gif)
+![/qva example gif](media/sticker.gif)

@@ -19,4 +19,4 @@ You can also use following parameters with `/qva`:
 
 Two add sticker to your sticker pack use [stickerpack creation bot](https://t.me/fStikBot).
 
-![/qva example](media/sticker.gif)
+![/qva example gif](media/sticker.gif)
