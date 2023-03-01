@@ -1,8 +1,8 @@
 import os
-from telegram import Update
-from telegram.ext import CallbackContext
+from telegram import Update, InlineQueryResultArticle, InputTextMessageContent, ParseMode
+from telegram.ext import CallbackContext, ContextTypes
 from telegram.ext import Updater
-from telegram.ext import MessageHandler, Filters
+from telegram.ext import MessageHandler, Filters, InlineQueryHandler
 import telegram
 from mallard import Mallard
 from stickers import file2sticker, file2animated_sticker, quote2sticker, video2emoji, image2emoji, FilePreprocessType
@@ -13,6 +13,7 @@ from stickers import VideoQuoteArguments, PhotoQuoteArguments
 from exceptions import ProcessingException
 from content.bubbles.bubbles import BUBBLES_COUNT
 from uuid import uuid4
+from html import escape
 from responses import *
 
 mallard = Mallard(random_answer_rate=150)
@@ -361,15 +362,32 @@ def get_sticker_id(update: Update, context: CallbackContext):
                                  reply_to_message_id=update.effective_message.message_id)
 
 
+def inline_query(update: Update, context):
+    results = [
+        InlineQueryResultArticle(
+            id=str(uuid4()),
+            title="Кто ты сегодня?",
+            thumb_url="https://i.ibb.co/6HPDsj7/2023-01-27-01-10-28.jpg",
+            input_message_content=InputTextMessageContent(
+                f"<i>{mallard.get_creature()}</i>", parse_mode=ParseMode.HTML
+            ),
+        ),
+    ]
+
+    update.inline_query.answer(results, cache_time=60 * 60 * 3, is_personal=True)
+
+
 def main():
     updater = Updater(token=token, use_context=True, workers=6)
     dispatcher = updater.dispatcher
 
     handler = MessageHandler((Filters.text | Filters.caption) & (~Filters.command), echo, run_async=True)
     command_handler = MessageHandler(Filters.command, command, run_async=True)
+    inline_handler = InlineQueryHandler(inline_query)
 
     dispatcher.add_handler(handler)
     dispatcher.add_handler(command_handler)
+    dispatcher.add_handler(inline_handler)
 
     print('STARTED')
     updater.bot.sendMessage(chat_id=admin_id, text='Я снова здесь!')

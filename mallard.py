@@ -2,8 +2,11 @@ import random
 
 import typing
 
-from content.dictionaries import BASIC_REPLIES_DICT, RANDOM_RESPONCES_LIST, EXCEPTIONS_DICT, TEXT_KEYWORDS
+from content.dictionaries import BASIC_REPLIES_DICT, RANDOM_RESPONCES_LIST, EXCEPTIONS_DICT, TEXT_KEYWORDS, \
+    CREATURES_LIST
 from responses import *
+import hashlib
+import datetime
 
 
 class Mallard:
@@ -14,6 +17,9 @@ class Mallard:
     def __init__(self, random_answer_rate=200):
         self.RANDOM_ANSWER_RATE = random_answer_rate
         pass
+
+    def get_creature(self, ):
+        return random.choice(CREATURES_LIST)
 
     def process(self, saying: str) -> typing.Tuple[typing.Union[str, None], typing.Union[ResponseType, None]]:
         """
@@ -35,6 +41,8 @@ class Mallard:
         Checks if saying has some basic words to reply (like "ква").
         :param saying:
         """
+        if saying in CREATURES_LIST:
+            return None
         saying = saying.upper()
         found_keywords = []
         for keyword in keywords.keys():
