@@ -99,6 +99,10 @@ combined_sticker_replies = {
         'CAACAgIAAxkBAAI5wWOfEDgTSHy3vI8O_vURd34kfeAGAALsIgAC_lcAAUkD28bbNUrhISwE',
         'CAACAgIAAxkBAAI5wmOfEDhXnlh2b8W9vyyqAAF13e0vCgACHiIAAq-d-UjzvXUoB6uYECwE',
         'CAACAgIAAxkBAAI7nWOhYJEd8ZXuAAGHURhFvoPJxXal-QACGSAAAmHeEElmhbbxu-s_ECwE',
+        'CAACAgIAAxkBAAJk_2Qm0_56hGhTyAui8R5Bj3v1R4NtAAKXEwACqh6RSuc3arlfq1eXLwQ',
+        'CAACAgIAAxkBAAJlAAFkJtQHi4gTGrzHB4f4mb85K_aMVAAChBIAAkxemEpTvqrozD5KdS8E',
+        'CAACAgIAAxkBAAJlAWQm1B4Z6Xb06_mDsjVFe7l-G9NmAALnJwAC3xBRSYCQ-QNYUywRLwQ',
+        'CAACAgIAAxkBAAJlAmQm1CernsAEzcBjntqkm5o_4P0EAAL3FgACxBKRSrU-68TdX4muLwQ',
     ],
     Keyword.KISS: [
         'CAACAgIAAxkBAAIES2M1cN1wtBwRBVJUrc41Q8IqUpdRAALbIQACh2hISahd3FVgrVqvKgQ',  # Kissing sticker
@@ -162,6 +166,10 @@ random_responses_sticker_list = [
     'CAACAgIAAxkBAAIF_GObMIpWbfQUrqTOwEszPdmL14uTAAIJAQACVp29CtZmXIPXP6gdLAQ',  # Snow Duck
     'CAACAgIAAxkBAAIF_2ObMJTxuaUT2odpn6I13qe0ZFBnAAILAQACVp29Ck6x56YI--1JLAQ',  # Exploding Duck
     'CAACAgIAAxkBAAI5wWOfEDgTSHy3vI8O_vURd34kfeAGAALsIgAC_lcAAUkD28bbNUrhISwE',  #Dog
+    'CAACAgIAAxkBAAJk_2Qm0_56hGhTyAui8R5Bj3v1R4NtAAKXEwACqh6RSuc3arlfq1eXLwQ',
+    'CAACAgIAAxkBAAJlAAFkJtQHi4gTGrzHB4f4mb85K_aMVAAChBIAAkxemEpTvqrozD5KdS8E',
+    'CAACAgIAAxkBAAJlAWQm1B4Z6Xb06_mDsjVFe7l-G9NmAALnJwAC3xBRSYCQ-QNYUywRLwQ',
+    'CAACAgIAAxkBAAJlAmQm1CernsAEzcBjntqkm5o_4P0EAAL3FgACxBKRSrU-68TdX4muLwQ',
 ]
 
 random_responses_voice_list = [
