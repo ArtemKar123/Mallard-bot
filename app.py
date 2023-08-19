@@ -1,6 +1,9 @@
 import os
-from telegram import Update, InlineQueryResultArticle, InputTextMessageContent, ParseMode
-from telegram.ext import CallbackContext, ContextTypes
+from typing import Union
+
+from telegram import Update, InlineQueryResultArticle, InputTextMessageContent
+from telegram import ParseMode, Message, VideoNote, Document, Video
+from telegram.ext import CallbackContext
 from telegram.ext import Updater
 from telegram.ext import MessageHandler, Filters, InlineQueryHandler
 import telegram
@@ -13,7 +16,6 @@ from stickers import VideoQuoteArguments, PhotoQuoteArguments
 from exceptions import ProcessingException
 from content.bubbles.bubbles import BUBBLES_COUNT
 from uuid import uuid4
-from html import escape
 from responses import *
 
 mallard = Mallard(random_answer_rate=150)
@@ -119,113 +121,73 @@ def reply_exception(reply_message: telegram.message = None, exception: Processin
 
 def parse_video_arguments(line: str) -> VideoQuoteArguments:
     result = VideoQuoteArguments()
-    counts = VideoQuoteArguments(0, 0, 0)
     words = line.split()
     for word in words[1:]:
         if (it := re.search(r's\d+', word)) is not None:
-            counts.starting_point += 1
-            if counts.starting_point > 1:
-                raise ProcessingException(
-                    exception_type=ProcessingException.ProcessingExceptionType.arguments_parsing_error,
-                    additional_message="Несколько вхождений аргумента 's*', не знаю, что делать :(")
-            result.starting_point = int(it.string[1:])
+            result.set_field('starting_point', int(it.string[1:]))
         elif (it := re.search(r'e\d+', word)) is not None:
-            counts.end_point += 1
-            if counts.end_point > 1:
-                raise ProcessingException(
-                    exception_type=ProcessingException.ProcessingExceptionType.arguments_parsing_error,
-                    additional_message="Несколько вхождений аргумента 'e*', не знаю, что делать :(")
-            result.end_point = int(it.string[1:])
+            result.set_field('end_point', int(it.string[1:]))
         elif (it := re.search(r'x\d+\.?\d*', word)) is not None:
-            counts.speed = 1 if counts.speed is None else counts.speed + 1
-            if counts.speed > 1:
-                raise ProcessingException(
-                    exception_type=ProcessingException.ProcessingExceptionType.arguments_parsing_error,
-                    additional_message="Несколько вхождений аргумента 'x*', не знаю, что делать :(")
-            result.speed = float(it.string[1:])
+            result.set_field('speed', float(it.string[1:]))
         elif (it := re.search(r'b\d*', word)) is not None:
-            counts.speech_bubble = 1 if counts.speech_bubble is None else counts.speech_bubble + 1
-            if counts.speech_bubble > 1:
-                raise ProcessingException(
-                    exception_type=ProcessingException.ProcessingExceptionType.arguments_parsing_error,
-                    additional_message="Несколько вхождений аргумента 'b*', не знаю, что делать :(")
-            if len(it.string) > 1:
-                bubble_id = int(it.string[1:])
-                if bubble_id < 1:
-                    raise ProcessingException(
-                        exception_type=ProcessingException.ProcessingExceptionType.arguments_parsing_error,
-                        additional_message="Номер не может быть меньше 1.")
-                if bubble_id > BUBBLES_COUNT:
-                    raise ProcessingException(
-                        exception_type=ProcessingException.ProcessingExceptionType.arguments_parsing_error,
-                        additional_message=f"Количество пузырьков в коллекции: {BUBBLES_COUNT}.")
-
-            result.speech_bubble = random.randint(0, BUBBLES_COUNT - 1) if it.string == 'b' else int(it.string[1:]) - 1
+            result.set_field('speech_bubble',
+                             random.randint(0, BUBBLES_COUNT - 1) if it.string == 'b' else int(it.string[1:]) - 1)
         elif word == 'r':
-            if counts.reverse is None:
-                counts.reverse = True
-            else:
-                raise ProcessingException(
-                    exception_type=ProcessingException.ProcessingExceptionType.arguments_parsing_error,
-                    additional_message="Несколько вхождений аргумента 'r*', не знаю, что делать :(")
-            result.reverse = True
+            result.set_field('reverse', True)
         elif word == 'j':
-            if counts.is_emoji is None:
-                counts.is_emoji = True
-            else:
-                raise ProcessingException(
-                    exception_type=ProcessingException.ProcessingExceptionType.arguments_parsing_error,
-                    additional_message="Несколько вхождений аргумента 'j*', не знаю, что делать :(")
-            result.is_emoji = True
+            result.set_field('is_emoji', True)
         else:
             raise ProcessingException(
                 exception_type=ProcessingException.ProcessingExceptionType.arguments_parsing_error,
                 additional_message=f'"{word}" не подходит как аргумент для команды.')
-        if counts.end_point == 1 and counts.starting_point == 0:
-            raise ProcessingException(
-                exception_type=ProcessingException.ProcessingExceptionType.arguments_parsing_error,
-                additional_message=f'Параметр "e*" должен использоваться только вместе с "s*".')
-
+    result.validate()
     return result
 
 
 def parse_photo_arguments(line: str) -> PhotoQuoteArguments:
     result = PhotoQuoteArguments()
-    counts = PhotoQuoteArguments(0)
     words = line.split()
     for word in words[1:]:
         if (it := re.search(r'b\d*', word)) is not None:
-            counts.speech_bubble = 1 if counts.speech_bubble is None else counts.speech_bubble + 1
-            if counts.speech_bubble > 1:
-                raise ProcessingException(
-                    exception_type=ProcessingException.ProcessingExceptionType.arguments_parsing_error,
-                    additional_message="Несколько вхождений аргумента 'b*', не знаю, что делать :(")
-            if len(it.string) > 1:
-                bubble_id = int(it.string[1:])
-                if bubble_id < 1:
-                    raise ProcessingException(
-                        exception_type=ProcessingException.ProcessingExceptionType.arguments_parsing_error,
-                        additional_message="Номер не может быть меньше 1.")
-                if bubble_id > BUBBLES_COUNT:
-                    raise ProcessingException(
-                        exception_type=ProcessingException.ProcessingExceptionType.arguments_parsing_error,
-                        additional_message=f"У меня есть только {BUBBLES_COUNT} пузырьков.")
-
-            result.speech_bubble = random.randint(0, BUBBLES_COUNT - 1) if it.string == 'b' else int(it.string[1:]) - 1
+            result.set_field('speech_bubble',
+                             random.randint(0, BUBBLES_COUNT - 1) if it.string == 'b' else int(it.string[1:]) - 1)
         elif word == 'j':
-            if counts.is_emoji is None:
-                counts.is_emoji = True
-            else:
-                raise ProcessingException(
-                    exception_type=ProcessingException.ProcessingExceptionType.arguments_parsing_error,
-                    additional_message="Несколько вхождений аргумента 'j*', не знаю, что делать :(")
-            result.is_emoji = True
+            result.set_field('is_emoji', True)
         else:
             raise ProcessingException(
                 exception_type=ProcessingException.ProcessingExceptionType.arguments_parsing_error,
                 additional_message=f'"{word}" не подходит как аргумент для команды.')
 
     return result
+
+
+def get_video(message: Message) -> Union[VideoNote, Document, Video]:
+    if message is None:
+        raise ProcessingException(exception_type=ProcessingException.ProcessingExceptionType.wrong_source_type)
+    video = message.video_note if message.video_note else message.document if message.document else message.video
+    if video is None:
+        raise ProcessingException(exception_type=ProcessingException.ProcessingExceptionType.wrong_source_type)
+    if video.file_size > 10485760:  # 10mb
+        raise ProcessingException(exception_type=ProcessingException.ProcessingExceptionType.file_too_large)
+    return video
+
+
+def add_and_delete_sticker(update: Update, context: CallbackContext, sticker, animated: bool = False):
+    sticker_set_name = f"{'animated' if animated else 'image'}_stickerpack_by_{context.bot.name[1:]}"
+    if context.bot.get_sticker_set(sticker_set_name) is None:
+        context.bot.create_new_sticker_set(user_id=admin_id, name=sticker_set_name, title='Sticker by @cryakwa_bot',
+                                           webm_sticker=sticker,
+                                           emojis="\U0001F60C")
+    kwargs = {'user_id': admin_id,
+              'name': sticker_set_name,
+              'webm_sticker' if animated else 'png_sticker': sticker,
+              'emojis': EMOJI_LIST[random.randint(0, len(EMOJI_LIST) - 1)]}
+    context.bot.addStickerToSet(**kwargs)
+    sticker_set = context.bot.get_sticker_set(sticker_set_name)
+    update.message.reply_sticker(reply_to_message_id=update.effective_message.message_id,
+                                 sticker=sticker_set.stickers[-1])
+    for sticker in sticker_set.stickers[1:]:
+        context.bot.delete_sticker_from_set(sticker.file_id)
 
 
 def video_quote(update: Update, context: CallbackContext):
@@ -233,46 +195,19 @@ def video_quote(update: Update, context: CallbackContext):
     message = update.message
     wait_message = context.bot.send_message(chat_id=update.effective_chat.id, text=waiting_text,
                                             reply_to_message_id=update.effective_message.message_id)
-
-    sticker = None
     try:
-        arguments = None
-        if (original_message := message.reply_to_message) is not None:
-            arguments = parse_video_arguments(message.text)
-            if (video_note := original_message.video_note) is not None:  # circle video
-                if (file_id := video_note.file_id) is not None:
-                    sticker = file2animated_sticker(file_id, context, preprocess_type=FilePreprocessType.circle,
-                                                    video_arguments=arguments)
-            elif (
-                    video := original_message.document if original_message.document is not None
-                    else original_message.video) is not None:
-                if video.file_size > 10485760:  # 10mb
-                    raise ProcessingException(exception_type=ProcessingException.ProcessingExceptionType.file_too_large)
-                sticker = file2animated_sticker(video.file_id, context, preprocess_type=FilePreprocessType.video_thumb,
-                                                video_arguments=arguments)
-            else:
-                raise ProcessingException(exception_type=ProcessingException.ProcessingExceptionType.wrong_source_type)
+        file = get_video(message.reply_to_message)
+        arguments = parse_video_arguments(message.text)
+        sticker = file2animated_sticker(file.file_id, context, preprocess_type=FilePreprocessType.circle,
+                                        video_arguments=arguments)
         if sticker is None:
-            edit_exception(wait_message=wait_message, exception=ProcessingException(
-                exception_type=ProcessingException.ProcessingExceptionType.unexpected))
-            return
+            raise ProcessingException(exception_type=ProcessingException.ProcessingExceptionType.wrong_source_type)
 
-        sticker_set_name = f"animated_stickerpack_by_{context.bot.name[1:]}"
-        # context.bot.create_new_sticker_set(user_id=admin_id, name=sticker_set_name, title='Sticker by @cryakwa_bot',
-        #                                    webm_sticker=sticker,
-        #                                    emojis="\U0001F60C")
-        if arguments is not None and arguments.is_emoji:
+        if arguments.is_emoji:
             update.message.reply_document(reply_to_message_id=update.effective_message.message_id,
                                           document=sticker, filename=str(uuid4()) + '.webm')
         else:
-            context.bot.addStickerToSet(user_id=admin_id, name=sticker_set_name,
-                                        webm_sticker=sticker,
-                                        emojis=EMOJI_LIST[random.randint(0, len(EMOJI_LIST) - 1)])
-            sticker_set = context.bot.get_sticker_set(sticker_set_name)
-            update.message.reply_sticker(reply_to_message_id=update.effective_message.message_id,
-                                         sticker=sticker_set.stickers[-1])
-            for sticker in sticker_set.stickers[1:]:
-                context.bot.delete_sticker_from_set(sticker.file_id)
+            add_and_delete_sticker(update, context, sticker, animated=True)
 
         wait_message.delete()
     except ProcessingException as e:
@@ -285,63 +220,43 @@ def video_quote(update: Update, context: CallbackContext):
         return
 
 
+def get_author(message: Message) -> str:
+    if message.forward_sender_name:
+        return message.forward_sender_name
+    if message.from_user and message.from_user.full_name:
+        return message.from_user.full_name
+    return 'unknown'
+
+
 def quote(update: Update, context: CallbackContext):
     message = update.message
     # print(message)
-    sticker = None
     try:
-        arguments = None
-        if (original_message := message.reply_to_message) is not None:
-            arguments = parse_photo_arguments(message.text)
-            if (text := original_message.text) is not None:
-                author = 'unknown'
-                if original_message.forward_sender_name is not None:
-                    author = original_message.forward_sender_name
-                elif original_message.from_user is not None and original_message.from_user.full_name is not None:
-                    author = original_message.from_user.full_name
-                sticker = quote2sticker(text, author)
-            elif (video_note := original_message.video_note) is not None:  # circle video
-                if (thumb := video_note.thumb) is not None:
-                    if (file_id := thumb.file_id) is not None:
-                        sticker = file2sticker(file_id, context, preprocess_type=FilePreprocessType.circle,
-                                               photo_arguments=arguments)
-            elif (
-                    video := original_message.document if original_message.document is not None else original_message.video) is not None:  # circle video
-                if (thumb := video.thumb) is not None:
-                    if (file_id := thumb.file_id) is not None:
-                        sticker = file2sticker(file_id, context, photo_arguments=arguments)
-                else:
-                    if video.file_size > 10485760:  # 10mb
-                        raise ProcessingException(
-                            exception_type=ProcessingException.ProcessingExceptionType.file_too_large)
-                    sticker = file2sticker(video.file_id, context, preprocess_type=FilePreprocessType.video_thumb,
-                                           photo_arguments=arguments)
-            elif (photo := original_message.photo) is not None and len(photo) > 0:
-                if (file_id := photo[-1].file_id) is not None:
-                    sticker = file2sticker(file_id, context, photo_arguments=arguments)
-            else:
-                raise ProcessingException(exception_type=ProcessingException.ProcessingExceptionType.wrong_source_type)
-        if sticker is None:
-            reply_exception(reply_message=message, exception=ProcessingException(
-                exception_type=ProcessingException.ProcessingExceptionType.unexpected), context=context, update=update)
-            return
+        original_message = message.reply_to_message
+        if original_message is None:
+            raise ProcessingException(exception_type=ProcessingException.ProcessingExceptionType.wrong_source_type)
 
-        sticker_set_name = f"image_stickerpack_by_{context.bot.name[1:]}"
-        # context.bot.create_new_sticker_set(user_id=admin_id, name=sticker_set_name, title='Sticker by @cryakwa_bot',
-        #                                    png_sticker=sticker,
-        #                                    emojis="\U0001F60C")
-        if arguments is not None and arguments.is_emoji:
+        arguments = parse_photo_arguments(message.text)
+        if text := original_message.text:
+            sticker = quote2sticker(text, get_author(original_message))
+        elif video := get_video(original_message):
+            if thumb := video.thumb:
+                sticker = file2sticker(thumb.file_id, context, photo_arguments=arguments)
+            else:
+                sticker = file2sticker(video.file_id, context, preprocess_type=FilePreprocessType.video_thumb,
+                                       photo_arguments=arguments)
+        elif (photo := original_message.photo) and len(photo) > 0:
+            sticker = file2sticker(photo[-1].file_id, context, photo_arguments=arguments)
+        else:
+            raise ProcessingException(exception_type=ProcessingException.ProcessingExceptionType.wrong_source_type)
+
+        if sticker is None:
+            raise ProcessingException(exception_type=ProcessingException.ProcessingExceptionType.unexpected)
+        if arguments.is_emoji:
             update.message.reply_document(reply_to_message_id=update.effective_message.message_id,
                                           document=sticker, )
         else:
-            context.bot.addStickerToSet(user_id=admin_id, name=sticker_set_name,
-                                        png_sticker=sticker,
-                                        emojis=EMOJI_LIST[random.randint(0, len(EMOJI_LIST) - 1)])
-            sticker_set = context.bot.get_sticker_set(sticker_set_name)
-            update.message.reply_sticker(reply_to_message_id=update.effective_message.message_id,
-                                         sticker=sticker_set.stickers[-1])
-            for sticker in sticker_set.stickers[1:]:
-                context.bot.delete_sticker_from_set(sticker.file_id)
+            add_and_delete_sticker(update, context, sticker)
     except ProcessingException as e:
         reply_exception(reply_message=message, exception=e, update=update, context=context)
         return
