@@ -70,7 +70,7 @@ TEXT_KEYWORDS = {
     'КУМ': Keyword.KUM,
     'ХНЫ': Keyword.CRY,
     'АВУУУУ': Keyword.AWOOO,
-    'ПРЕКРАТИТЬ ХУЙНЮ!': Keyword.STOP,
+    'ПРЕКРАТИТЬ': Keyword.STOP,
 }
 
 combined_text_replies = {
