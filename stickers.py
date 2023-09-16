@@ -311,7 +311,7 @@ def quote2sticker(quote, author, fg='black', font_file=None, font_size=None, wid
     quote = quote_text
     sentence = f"{quote} - {author}"
 
-    quote = ImageFont.truetype(font_file if font_file else "fonts/JMH Typewriter-Bold.otf",
+    quote = ImageFont.truetype(font_file if font_file else "content/fonts/jmh-typewriter.bold.otf",
                                font_size if font_size else 28)
 
     img = Image.new("RGB", (width, height), color=(255, 255, 255))
