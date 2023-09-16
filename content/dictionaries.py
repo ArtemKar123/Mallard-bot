@@ -21,6 +21,8 @@ def generate_list(target: typing.List, dictionary: typing.List, response_type: R
 
 EXCEPTIONS_DICT = {
     'КАР': ['КАРТ'],
+    'ТЯВ': ['ТЯВТЯВ'],
+    'МУМ': ['ЕМУМ'],
 }
 
 
@@ -37,6 +39,12 @@ class Keyword(Enum):
     WHAT = 10
     ARCH = 11,
     WOOF = 12
+    TYAV = 13
+    MUM = 14
+    KUM = 15
+    CRY = 16
+    AWOOO = 17
+    STOP = 18
 
 
 TEXT_KEYWORDS = {
@@ -56,7 +64,13 @@ TEXT_KEYWORDS = {
     'ARCH': Keyword.ARCH,
     'АРЧ': Keyword.ARCH,
     'ТЯВ': Keyword.WOOF,
-    'ГАВ': Keyword.WOOF
+    'ГАВ': Keyword.WOOF,
+    'ТЯВТЯВ': Keyword.TYAV,
+    'МУМ': Keyword.MUM,
+    'КУМ': Keyword.KUM,
+    'ХНЫ': Keyword.CRY,
+    'АВУУУУ': Keyword.AWOOO,
+    'ПРЕКРАТИТЬ': Keyword.STOP,
 }
 
 combined_text_replies = {
@@ -93,16 +107,55 @@ combined_sticker_replies = {
         'CAACAgIAAxkBAAIEl2M1eN3VUarEYilDZ81I1IDILRcqAAI6FAACh9vJS7eEtmgl-WtUKgQ',  # Cat runs to you
     ],
     Keyword.WOOF: [
-        'CAACAgIAAxkBAAI5vmOfEDYHgMiG9S5Gx4TKGTGF9mT9AALHLwACeIv4SEdXNRvd2S1SLAQ',
-        'CAACAgIAAxkBAAI5v2OfEDdh1Ocm8I6DdVGR-mm-qASWAAJ1IwACi5H4SH5HSf9EkicCLAQ',
-        'CAACAgIAAxkBAAI5wGOfEDfkM_gSvLpw5bNcpVdamKPjAAKYKAACgBz5SGvBWQcrxBnfLAQ',
-        'CAACAgIAAxkBAAI5wWOfEDgTSHy3vI8O_vURd34kfeAGAALsIgAC_lcAAUkD28bbNUrhISwE',
-        'CAACAgIAAxkBAAI5wmOfEDhXnlh2b8W9vyyqAAF13e0vCgACHiIAAq-d-UjzvXUoB6uYECwE',
-        'CAACAgIAAxkBAAI7nWOhYJEd8ZXuAAGHURhFvoPJxXal-QACGSAAAmHeEElmhbbxu-s_ECwE',
-        'CAACAgIAAxkBAAJk_2Qm0_56hGhTyAui8R5Bj3v1R4NtAAKXEwACqh6RSuc3arlfq1eXLwQ',
-        'CAACAgIAAxkBAAJlAAFkJtQHi4gTGrzHB4f4mb85K_aMVAAChBIAAkxemEpTvqrozD5KdS8E',
-        'CAACAgIAAxkBAAJlAWQm1B4Z6Xb06_mDsjVFe7l-G9NmAALnJwAC3xBRSYCQ-QNYUywRLwQ',
-        'CAACAgIAAxkBAAJlAmQm1CernsAEzcBjntqkm5o_4P0EAAL3FgACxBKRSrU-68TdX4muLwQ',
+        'CAACAgIAAxkBAAI5vmOfEDYHgMiG9S5Gx4TKGTGF9mT9AALHLwACeIv4SEdXNRvd2S1SLAQ', # tax 1
+        'CAACAgIAAxkBAAI5v2OfEDdh1Ocm8I6DdVGR-mm-qASWAAJ1IwACi5H4SH5HSf9EkicCLAQ', # tax 2
+        'CAACAgIAAxkBAAI5wGOfEDfkM_gSvLpw5bNcpVdamKPjAAKYKAACgBz5SGvBWQcrxBnfLAQ', # tax 3
+        'CAACAgIAAxkBAAI5wWOfEDgTSHy3vI8O_vURd34kfeAGAALsIgAC_lcAAUkD28bbNUrhISwE', # tax 4
+        'CAACAgIAAxkBAAI5wmOfEDhXnlh2b8W9vyyqAAF13e0vCgACHiIAAq-d-UjzvXUoB6uYECwE', # tax 5
+        'CAACAgIAAxkBAAI7nWOhYJEd8ZXuAAGHURhFvoPJxXal-QACGSAAAmHeEElmhbbxu-s_ECwE', # tax 6
+        'CAACAgIAAxkBAAJk_2Qm0_56hGhTyAui8R5Bj3v1R4NtAAKXEwACqh6RSuc3arlfq1eXLwQ', # genshin 1
+        'CAACAgIAAxkBAAJlAAFkJtQHi4gTGrzHB4f4mb85K_aMVAAChBIAAkxemEpTvqrozD5KdS8E', # genshin 2
+        'CAACAgIAAxkBAAJlAWQm1B4Z6Xb06_mDsjVFe7l-G9NmAALnJwAC3xBRSYCQ-QNYUywRLwQ', # genshin 3
+        'CAACAgIAAxkBAAJlAmQm1CernsAEzcBjntqkm5o_4P0EAAL3FgACxBKRSrU-68TdX4muLwQ', # genshin 4
+    ],
+    Keyword.TYAV: [
+        'CAACAgUAAxkBAAJBdGUFfFivpX8NdwvTNdKzlTiHu3WJAAJIDAACQ-EpVbdNQTRI9ZdGMAQ', # genshin 1
+        'CAACAgUAAxkBAAJBdmUFfGdMreyczm3GLzFCoGeDpmWZAAJECAACBXQoVQJEfF50Cn4SMAQ', # genshin 2
+        'CAACAgIAAxkBAAJBeGUFfIQDytt-GkPaKKosq0fcy6HgAAL3FgACxBKRSrU-68TdX4muMAQ', # genshin 3
+        'CAACAgUAAxkBAAJBcmUFfD2wbilsYL9otbX-KupwUnFuAAKoDAACgE0oVbcumpOFqJywMAQ', # genshin 4
+        'CAACAgIAAxkBAAJBamUFe-OS0eogm6Q9SSHniKn5UNleAAKZNQACWv3ISnLIkUTOxbnjMAQ', # genshin 5
+        'CAACAgIAAxkBAAJBbmUFfApNINhwnui19Zo7oR8T7LVxAALyLgAC7iPISpBoaFHx3-r_MAQ', # genshin 6
+        'CAACAgUAAxkBAAJBcGUFfCl-wEK5ZZryJGY1akxzx4kjAAJkCgACvEIpVaJhoGKEuO_mMAQ', # genshin 7
+    ],
+    Keyword.AWOOO: [
+        'CAACAgUAAxkBAAJBcGUFfCl-wEK5ZZryJGY1akxzx4kjAAJkCgACvEIpVaJhoGKEuO_mMAQ', # awooo
+    ],
+    Keyword.MUM: [
+        'CAACAgIAAxkBAAJBlGUFfjdnwP9fMR0jvlUIbkinvQFPAAIyMAACSEPJSv18FlPudtmnMAQ', # MUM 1
+        'CAACAgIAAxkBAAJBlmUFfkSszywITGEChHQLah3z_6ArAALsMgACSAzISqR7envspMgjMAQ', # MUM 2
+        'CAACAgIAAxkBAAJBmGUFflMhYS-JZX-Uju6kL_6LsQ2kAAJtMwAC0CHJSmvz6yBgitNMMAQ', # MUM 3
+        'CAACAgIAAxkBAAJBmmUFfmJH0SfX9FbuOwu2mA-CqPiJAALZMgAC_PTJSpnSIdOT7EndMAQ', # MUM 4
+        'CAACAgIAAxkBAAJBnGUFfnHM7HatPDRtgxhBN_BMHa3bAALbLgACpqXIStLnXzlqxgHzMAQ', # MUM 5
+        'CAACAgIAAxkBAAJBnmUFfpbLUCI1Z31okHHbhOPULbPnAALWLQAC1LDISvaxtxC4I4_7MAQ', # MUM 6
+        'CAACAgIAAxkBAAJBkmUFfh2IW8K-4OPUN35S63rwO3YXAAIpMgACJnPISxrsjZAKWDA1MAQ', # MUM 7
+    ],
+    Keyword.KUM: [
+        'CAACAgUAAxkBAAJBgmUFfOPbux40BJczFQSSpwcg-vwEAAKkCAAC9rs4VfJP3LJxMlHxMAQ', # kum
+        'CAACAgUAAxkBAAJBgmUFfOPbux40BJczFQSSpwcg-vwEAAKkCAAC9rs4VfJP3LJxMlHxMAQ', # kum
+        'CAACAgUAAxkBAAJBgmUFfOPbux40BJczFQSSpwcg-vwEAAKkCAAC9rs4VfJP3LJxMlHxMAQ', # kum
+        'CAACAgUAAxkBAAJBgmUFfOPbux40BJczFQSSpwcg-vwEAAKkCAAC9rs4VfJP3LJxMlHxMAQ', # kum
+        'CAACAgUAAxkBAAJBgmUFfOPbux40BJczFQSSpwcg-vwEAAKkCAAC9rs4VfJP3LJxMlHxMAQ', # kum
+        'CAACAgIAAxkBAAJBhGUFfQG_lN4N5BwqlfwkZdLtE-S-AAL7NQACjKngS6qJ-6cyR8hzMAQ', # cooom
+    ],
+    Keyword.CRY: [
+        'CAACAgUAAxkBAAJBiGUFfXKeuZ-cSB-MFCergbbEkUxqAALNCgACzqUpVQ7rlE3JhSUdMAQ', # genshin 1
+        'CAACAgUAAxkBAAJBimUFfYadq0k2IxZIOtwtUdf_pgXPAAI2GAACCNApVbohev8pWVlYMAQ', # genshin 2
+        'CAACAgUAAxkBAAJBjGUFfZ5fJPzDhYfJ9THWnhqG7aoFAAJtCgACLqUpVUWJN3-GQxp3MAQ', # genshin 3
+        'CAACAgIAAxkBAAJBjmUFfbbZBC2bfgX9YKkveHrngaI2AALiMAACPlrJSlo1TJFjIEhQMAQ', # genshin 4
+        'CAACAgIAAxkBAAJBkGUFfcMVLGmRUbc8YoHqvY7-XzdIAAJMMAACPKnJSiTf7_Uoy5B7MAQ', # genshin 5
+    ],
+    Keyword.STOP: [
+        'CAACAgIAAxkBAAJBhmUFfRRnDIK1E9B8ytqe9G0CX7aHAAICEwACjV-RSvCl1POaUSO5MAQ', # stop
     ],
     Keyword.KISS: [
         'CAACAgIAAxkBAAIES2M1cN1wtBwRBVJUrc41Q8IqUpdRAALbIQACh2hISahd3FVgrVqvKgQ',  # Kissing sticker
