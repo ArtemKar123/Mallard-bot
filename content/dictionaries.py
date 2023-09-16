@@ -155,7 +155,7 @@ combined_sticker_replies = {
         'CAACAgIAAxkBAAJBkGUFfcMVLGmRUbc8YoHqvY7-XzdIAAJMMAACPKnJSiTf7_Uoy5B7MAQ', # genshin 5
     ],
     Keyword.STOP: [
-        'CAACAgIAAxkBAAJBhmUFfRRnDIK1E9B8ytqe9G0CX7aHAAICEwACjV-RSvCl1POaUSO5MAQ', # stop the huynya
+        'CAACAgIAAxkBAAJBhmUFfRRnDIK1E9B8ytqe9G0CX7aHAAICEwACjV-RSvCl1POaUSO5MAQ', # stop
     ],
     Keyword.KISS: [
         'CAACAgIAAxkBAAIES2M1cN1wtBwRBVJUrc41Q8IqUpdRAALbIQACh2hISahd3FVgrVqvKgQ',  # Kissing sticker
