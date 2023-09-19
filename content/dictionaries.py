@@ -22,7 +22,8 @@ def generate_list(target: typing.List, dictionary: typing.List, response_type: R
 EXCEPTIONS_DICT = {
     'КАР': ['КАРТ'],
     'ТЯВ': ['ТЯВТЯВ'],
-    'МУМ': ['ЕМУМ'],
+    'МУМ': ['ЕМУМ', 'ИМУМ'],
+    'КУМ': ['ЯКУМАН'],
 }
 
 
@@ -145,7 +146,6 @@ combined_sticker_replies = {
         'CAACAgUAAxkBAAJBgmUFfOPbux40BJczFQSSpwcg-vwEAAKkCAAC9rs4VfJP3LJxMlHxMAQ', # kum
         'CAACAgUAAxkBAAJBgmUFfOPbux40BJczFQSSpwcg-vwEAAKkCAAC9rs4VfJP3LJxMlHxMAQ', # kum
         'CAACAgUAAxkBAAJBgmUFfOPbux40BJczFQSSpwcg-vwEAAKkCAAC9rs4VfJP3LJxMlHxMAQ', # kum
-        'CAACAgIAAxkBAAJBhGUFfQG_lN4N5BwqlfwkZdLtE-S-AAL7NQACjKngS6qJ-6cyR8hzMAQ', # cooom
     ],
     Keyword.CRY: [
         'CAACAgUAAxkBAAJBiGUFfXKeuZ-cSB-MFCergbbEkUxqAALNCgACzqUpVQ7rlE3JhSUdMAQ', # genshin 1
