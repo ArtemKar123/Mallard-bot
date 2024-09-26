@@ -10,7 +10,7 @@ from PIL import Image, ImageDraw, ImageFont, ImageFilter
 import random
 from dataclasses import dataclass
 from exceptions import ProcessingException
-from content.bubbles.bubbles import BUBBLE_NAMES
+from content.bubbles.bubbles import BUBBLE_NAMES, BUBBLES_COUNT
 
 
 class FilePreprocessType(enum.Enum):
@@ -19,6 +19,17 @@ class FilePreprocessType(enum.Enum):
     video_thumb = 2
     animation = 3
     default = 4
+
+
+def validate_speech_bubble(value):
+    if value < 1:
+        raise ProcessingException(
+            exception_type=ProcessingException.ProcessingExceptionType.arguments_parsing_error,
+            additional_message="Номер не может быть меньше 1.")
+    if value > BUBBLES_COUNT:
+        raise ProcessingException(
+            exception_type=ProcessingException.ProcessingExceptionType.arguments_parsing_error,
+            additional_message=f"Количество пузырьков в коллекции: {BUBBLES_COUNT}.")
 
 
 @dataclass
@@ -35,11 +46,43 @@ class VideoQuoteArguments:
     speech_bubble: int = None  # b
     is_emoji: bool = None  # j
 
+    def field_name_to_flag(self, field_name):
+        mp = {name: flag for (name, flag) in zip(self.__annotations__.keys(), ('s', 'e', 'x', 'l', 'r', 'b', 'j'))}
+        return mp[field_name]
+
+    def set_field(self, field, value):
+        if getattr(self, field) is not None:
+            raise ProcessingException(
+                exception_type=ProcessingException.ProcessingExceptionType.arguments_parsing_error,
+                additional_message=f"Несколько вхождений аргумента '{self.field_name_to_flag(field)}*', не знаю, что делать :(")
+        if field == 'speech_bubble':
+            validate_speech_bubble(value)
+        setattr(self, field, value)
+
+    def validate(self):
+        if self.end_point is not None and self.starting_point is None:
+            raise ProcessingException(
+                exception_type=ProcessingException.ProcessingExceptionType.arguments_parsing_error,
+                additional_message=f'Параметр "e*" должен использоваться только вместе с "s*".')
+
 
 @dataclass
 class PhotoQuoteArguments:
     speech_bubble: int = None  # b
     is_emoji: bool = None  # j
+
+    def field_name_to_flag(self, field_name):
+        mp = {name: flag for (name, flag) in zip(self.__annotations__.keys(), ('b', 'j'))}
+        return mp[field_name]
+
+    def set_field(self, field, value):
+        if getattr(self, field) is not None:
+            raise ProcessingException(
+                exception_type=ProcessingException.ProcessingExceptionType.arguments_parsing_error,
+                additional_message=f"Несколько вхождений аргумента '{self.field_name_to_flag(field)}*', не знаю, что делать :(")
+        if field == 'speech_bubble':
+            validate_speech_bubble(value)
+        setattr(self, field, value)
 
 
 def video2emoji(file_id: str, context: CallbackContext):
@@ -76,7 +119,6 @@ def video2emoji(file_id: str, context: CallbackContext):
             emoji.seek(0)
     return emoji
 
-
 def image2emoji(file_id: str, context: CallbackContext):
     file_bytes = context.bot.getFile(file_id).download_as_bytearray()
     image = None
@@ -97,6 +139,8 @@ def image2emoji(file_id: str, context: CallbackContext):
 def file2animated_sticker(file_id: str, context: CallbackContext,
                           preprocess_type: FilePreprocessType = FilePreprocessType.default,
                           video_arguments: VideoQuoteArguments = VideoQuoteArguments()) -> BytesIO:
+    if file_id is None:
+        raise ProcessingException(exception_type=ProcessingException.ProcessingExceptionType.wrong_source_type)
     file_bytes = context.bot.getFile(file_id).download_as_bytearray()
     sticker = None
     original_arguments = video_arguments
@@ -257,11 +301,12 @@ def file2animated_sticker(file_id: str, context: CallbackContext,
 def file2sticker(file_id: str, context: CallbackContext,
                  preprocess_type: FilePreprocessType = FilePreprocessType.default,
                  photo_arguments: PhotoQuoteArguments = PhotoQuoteArguments()) -> BytesIO:
-    print(photo_arguments.speech_bubble)
+    if file_id is None:
+        raise ProcessingException(exception_type=ProcessingException.ProcessingExceptionType.wrong_source_type)
+    # print(photo_arguments.speech_bubble)
     file_bytes = context.bot.getFile(file_id).download_as_bytearray()
-    image = None
     if preprocess_type == FilePreprocessType.video_thumb:
-        file_bytes = context.bot.getFile(file_id).download_as_bytearray()
+        # file_bytes = context.bot.getFile(file_id).download_as_bytearray()
         with tempfile.NamedTemporaryFile() as temp:
             temp.write(file_bytes)
 
@@ -311,7 +356,7 @@ def quote2sticker(quote, author, fg='black', font_file=None, font_size=None, wid
     quote = quote_text
     sentence = f"{quote} - {author}"
 
-    quote = ImageFont.truetype(font_file if font_file else "fonts/JMH Typewriter-Bold.otf",
+    quote = ImageFont.truetype(font_file if font_file else "content/fonts/jmh-typewriter.bold.otf",
                                font_size if font_size else 28)
 
     img = Image.new("RGB", (width, height), color=(255, 255, 255))
